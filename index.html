@@ -1,0 +1,711 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Presentation of ALESIA</title>
+<meta name="description" content="ALESIA — data-driven optimisation platform for superconducting magnets (CEA Paris-Saclay, IRFU).">
+<link rel="icon" href="assets/img/cea-square.png">
+<link rel="stylesheet" href="vendor/fonts/fonts.css">
+<link rel="stylesheet" href="vendor/katex/katex.min.css">
+<link rel="stylesheet" href="engine/deck.css">
+<link rel="stylesheet" href="theme/theme.css">
+</head>
+<body>
+
+<!--
+  HOW TO ADD A SLIDE
+  Copy any <section class="slide"> … </section> block below and edit it.
+    data-title="…"        name shown in the overview and speaker view
+    data-step             on any element: appears on the next key press
+    data-widget="name"    mounts a JavaScript widget (see widgets/*.js)
+    <aside class="notes"> speaker notes (press S)
+  Footer text / date / logo are set once on the <div class="deck"> below.
+    data-last             on one slide (here the conclusion): page numbers read "n/N" and the
+                          progress bar fills up to that slide; slides after it (back-up) show "n"
+-->
+<div class="deck"
+     data-footer="Presentation of ALESIA | Séminaire AISSAI – IA en ingénierie mécanique | Minenna"
+     data-date="4/11/2026"
+     data-footer-logo="assets/img/cea-square.png">
+
+<!-- ====================================== 1 · PRESENTATION OF ALESIA -->
+<section class="slide title-slide" data-chrome="none" data-title="Presentation of ALESIA">
+  <img class="title-logo" src="assets/img/cea-irfu-logo.png" alt="CEA IRFU">
+  <div class="title-block">
+    <h1>Presentation of <em>ALESIA</em></h1>
+    <p class="subtitle">Data-driven optimisation of superconducting magnets and particle accelerators</p>
+    <p class="byline"><b>Damien&nbsp;F.&nbsp;G.&nbsp;Minenna</b>, <span class="coauthors">Robin&nbsp;Penavaire, Valerio&nbsp;Calvelli, Christophe&nbsp;Berriaud, Damien&nbsp;Simon,<br>Francesco&nbsp;Stacchi, Michel&nbsp;Segreti, Olivier&nbsp;Tuske</span><br><span class="affil">CEA Paris-Saclay, IRFU</span></p>
+    <p class="venue">Séminaire AISSAI – IA en ingénierie mécanique</p>
+  </div>
+  <div class="magnet-stage" data-widget="magnet-design"></div>
+  <aside class="notes"></aside>
+</section>
+
+<!-- ================================================== 2 · OBJECTIVES -->
+<section class="slide" data-title="Superconducting magnet design">
+  <h2>Superconducting magnet design</h2>
+  <div class="content cols" style="--cols: 0.8fr 1.2fr; --gap: 20px">
+    <div style="font-size: 25px">
+      <h3>Integrated system</h3>
+      <ul>
+        <li>Multiple physics and engineering</li>
+        <li>Multiple targets and constraints</li>
+        <li>Multiple software tools</li>
+        <li>Multiple design phases</li>
+        <li>Huge number of parameters</li>
+        <li class="hl">All must be processed together</li>
+      </ul>
+      <div data-step>
+        <h3 class="mt-m">Objectives</h3>
+        <ul>
+          <li>Speed up design phases</li>
+          <li>Help analyse data
+            <ul><li>From the large parameter space</li></ul>
+          </li>
+        </ul>
+      </div>
+      <div data-step>
+        <h3 class="mt-m"><span class="hl">ALESIA</span></h3>
+        <ul>
+          <li>New optimisation platform at CEA
+            <ul><li>Using machine learning and evolutionary algorithms</li></ul>
+          </li>
+          <li>Applications
+            <ul>
+              <li>SPIN ROTATORS accelerator magnets</li>
+              <li>ECR ion source magnets and extraction systems</li>
+              <li>MRI magnets</li>
+              <li>HTS magnets for fusion</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="fill" data-widget="objectives-wheel"></div>
+  </div>
+  <p class="cite">Minenna et al. (2026), <a href="https://arxiv.org/abs/2603.29740">arXiv:2603.29740</a></p>
+</section>
+
+<!-- ================================================ 3 · ALESIA – UNDER THE HOOD -->
+<section class="slide" data-title="ALESIA – Under the hood">
+  <h2>ALESIA – Under the hood</h2>
+  <div class="content cols" style="--cols: 0.92fr 1.08fr; --gap: 34px">
+    <div class="full" data-widget="alesia-stack"></div>
+    <!-- the layers, top first; data-tiles: "Name" or "Name=path/to/logo.png" (drawn on the top of the layer) -->
+    <ol class="us-list">
+      <li data-tiles="Biot–Savart | Conductor analysis | Quench">
+        <div class="us-t">In-house modelling</div>
+        <div class="us-d">A set of analytical and quasi-analytical models for superconducting magnets, built directly into ALESIA, for example Biot–Savart field and quench modelling. This allows them to access the material and project databases directly.</div>
+      </li>
+      <li data-tiles="Python | Matplotlib | SciPy | Jupyter | Quarto">
+        <div class="us-t">Data analysis tools</div>
+        <div class="us-d">An additional layer of tools to facilitate data analysis for optimisation.</div>
+      </li>
+      <li data-tiles="scikit-learn | PyTorch | TensorFlow">
+        <div class="us-t">Learning surrogate</div>
+        <div class="us-d">Surrogate modelling based on the simulation data.</div>
+      </li>
+      <li data-tiles="GA | DE | PSO | CMA-ES | BO | DNN">
+        <div class="us-t">Multi-parametric optimisers</div>
+        <div class="us-d">Based on evolutionary computation and active learning, including genetic algorithms (GA), differential evolution (DE), particle swarm optimisation (PSO), covariance matrix adaptation evolution strategy (CMA-ES), Bayesian optimisation and deep neural networks (DNN).</div>
+      </li>
+      <li data-tiles="CST | Opera | Ansys | Cast3M | RAT">
+        <div class="us-t">Interface with physics software</div>
+        <div class="us-d">Integrates external physics simulation codes to export input data from ALESIA to the simulation code and to import the resulting output data back into the ALESIA project database.</div>
+      </li>
+      <li data-tiles="HDF5 | pandas">
+        <div class="us-t">Project database</div>
+        <div class="us-d">Stores inputs, outputs and simulation scripts. Facilitates data analysis by surrogate models.</div>
+      </li>
+      <li data-tiles="SQL">
+        <div class="us-t">Material database</div>
+        <div class="us-d">Stores material properties and superconductor fits.</div>
+      </li>
+      <li data-tiles="Cython | Windows | macOS | Linux | Slurm">
+        <div class="us-t">Project manager</div>
+        <div class="us-d">Launches simulations and supports their parallel execution on Windows, macOS, Linux and HPC clusters (Slurm).</div>
+      </li>
+    </ol>
+  </div>
+  <aside class="notes"></aside>
+</section>
+
+<!-- ======== 4 · OPTIMISATION OF SUPERCONDUCTING MAGNET WITH ALESIA  (versions: SC magnet / ECRIS) -->
+<section class="slide" data-title="Optimisation of superconducting magnets with ALESIA">
+  <h2 class="h2-long"><span data-for-variant="sc">Optimisation of superconducting magnets with ALESIA</span><span data-for-variant="ecris">Optimisation of ECR ion sources with ALESIA</span></h2>
+  <div class="variant-switch"><span class="vs-label">Case:</span><button data-variant="sc">Superconducting magnet</button><button data-variant="ecris">ECR ion source</button></div>
+  <div class="content cols" style="--cols: 0.5fr 1.5fr; --gap: 24px">
+    <div style="font-size: 27px; align-self: center">
+      <h3>New design philosophy</h3>
+      <ul>
+        <li>Compute everything <span class="hl">together</span> in the same workflow
+          <ul data-for-variant="sc">
+            <li class="b">Magnetic</li>
+            <li class="b">Mechanical</li>
+            <li class="b">Conductor</li>
+            <li class="b">Quench</li>
+          </ul>
+          <ul data-for-variant="ecris">
+            <li class="b">Beam extraction</li>
+          </ul>
+        </li>
+        <li>Hundreds of inputs and outputs</li>
+      </ul>
+      <div data-step>
+        <h3 class="mt-m">ALESIA</h3>
+        <ul>
+          <li>Inputs selected by optimisers
+            <ul><li>Taking into account interdependencies</li></ul>
+          </li>
+          <li>Launch simulations and retrieve results</li>
+          <li><span class="hl">Automated</span> and parallelised process</li>
+        </ul>
+      </div>
+    </div>
+    <div class="full" data-widget="alesia-workflow-live"></div>
+  </div>
+  <aside class="notes"></aside>
+</section>
+
+<!-- ================ 5 · FITNESS SCORE  (versions: SC magnet / ECRIS) -->
+<section class="slide" data-title="Optimisation objectives">
+  <h2>Optimisation objectives</h2>
+  <div class="variant-switch"><span class="vs-label">Case:</span><button data-variant="sc">Superconducting magnet</button><button data-variant="ecris">ECR ion source</button></div>
+  <div class="content cols" style="--cols: 0.86fr 1.14fr; --gap: 30px">
+    <div style="align-self:center">
+      <div data-for-variant="sc">
+        <h3>Superconducting magnet optimisation</h3>
+        <ul>
+          <li>Dynamic inputs
+            <ul>
+              <li>Conductor dimensions</li>
+              <li>Coil dimensions</li>
+              <li>Yoke dimensions</li>
+              <li>Current density</li>
+            </ul>
+          </li>
+          <li>Targets and constraints
+            <ul>
+              <li>Magnetic field quality</li>
+              <li>Stresses</li>
+              <li>Conductor margins</li>
+              <li>Hotspot temperature</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+      <div data-for-variant="ecris">
+        <h3>ECR ion source optimisation</h3>
+        <ul>
+          <li>Dynamic inputs
+            <ul>
+              <li>Electrode shape</li>
+              <li>Potentials</li>
+              <li>Plasma inputs</li>
+            </ul>
+          </li>
+          <li>Targets and constraints
+            <ul>
+              <li>Beam current</li>
+              <li>Beam emittance</li>
+              <li>Maximum electric field</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+      <div data-step>
+      <h3 class="mt-m">For each run</h3>
+      <ul>
+        <li>A design score is assigned
+          <ul>
+            <li>$f(y)=\sum_i w_i\,(y_i-t_i)^2$</li>
+            <li>Targets $t$ and weights $w$</li>
+          </ul>
+        </li>
+        <li>Goal: find a <span class="hl-global">global minimum</span>
+          <ul>
+            <li>Without being trapped by <span class="hl-localmin">local minima</span></li>
+            <li>Taking into account <span class="hl-disc">discontinuities</span></li>
+            <li>Achieved by optimisers</li>
+          </ul>
+        </li>
+      </ul>
+      </div>
+    </div>
+    <div class="opt-right">
+      <div class="param-anim" data-for-variant="sc" data-widget="coil-params"></div>
+      <div class="param-anim" data-for-variant="ecris" data-widget="ibsimu-params"></div>
+      <div class="opt-land" data-widget="alesia-landscape"></div>
+    </div>
+  </div>
+  <aside class="notes"></aside>
+</section>
+
+<!-- ================================= 6 · SEARCH HEURISTIC OPTIMISERS -->
+<section class="slide" data-title="Search heuristic optimisers">
+  <h2>Search heuristic optimisers</h2>
+  <div class="content cols" style="--cols: 0.66fr 1.34fr; --gap: 40px">
+    <div class="od-side">
+      <div class="card accent od-method">
+        <div data-od-show="random"><h3>Random <span class="muted">(benchmark)</span></h3><p>Points drawn uniformly at random</p><p class="od-key"><b>No real convergence</b></p></div>
+        <div data-od-show="ga"><h3>Genetic algorithm <span class="muted">(GA)</span></h3><p>Selection of the best, crossover and mutation</p><p class="od-key"><b>Slow convergence:</b> requires evaluating large populations over multiple generations</p></div>
+        <div data-od-show="de"><h3>Differential evolution <span class="muted">(DE)</span></h3><p>New individuals from weighted differences between others</p><p class="od-key"><b>Easy to use:</b> few hyperparameters (F, CR, population size)</p></div>
+        <div data-od-show="pso"><h3>Particle swarm <span class="muted">(PSO)</span></h3><p>Particles drawn to their own best and to the swarm’s best position</p><p class="od-key"><b>Easy to use:</b> low number of hyperparameters</p></div>
+        <div data-od-show="cmaes"><h3>CMA-ES</h3><p>Evolution strategy: the Gaussian search distribution (dashed ellipse) adapts its size and orientation</p><p class="od-key"><b>Self-adapting:</b> no step size to tune</p></div>
+        <div data-od-show="bo"><h3>Bayesian optimisation <span class="muted">(BO)</span></h3><p>Gaussian-process surrogate; new points maximise the expected improvement</p><p class="od-key"><b>Better convergence:</b> reduces the amount of data required</p></div>
+        <div data-od-show="dnn"><h3>Deep neural network <span class="muted">(DNN)</span></h3><p>Active learning: network refitted at each iteration; new points are the best predicted</p><p class="od-key"><b>Weaknesses:</b> training overhead, risk of overfitting</p></div>
+      </div>
+      <div class="card od-fam" data-od-hl="ga de pso cmaes">
+        <h3>Evolutionary computation</h3>
+        <ul>
+          <li>GA, DE, PSO, CMA-ES, ant colony…</li>
+          <li><b>Easy to use:</b> low number of hyperparameters</li>
+          <li><b>Slow convergence:</b> large populations over many generations</li>
+        </ul>
+      </div>
+      <div class="card od-fam" data-od-hl="bo dnn">
+        <h3>Machine learning <span class="muted">(active learning)</span></h3>
+        <ul>
+          <li>Surrogate model (GP, DNN) refitted at each iteration</li>
+          <li><b>Better convergence:</b> reduces the amount of data required</li>
+          <li><b>Weaknesses:</b> training overhead, overfitting</li>
+        </ul>
+      </div>
+      <p class="od-both"><b>Both:</b> handle non-differentiable or discontinuous functions and can escape local minima, but do not guarantee the global optimum</p>
+    </div>
+    <div class="full" data-widget="optim-demo"></div>
+  </div>
+  <aside class="notes"></aside>
+</section>
+
+<!-- ========================================== 7 · LEARNING SURROGATE -->
+<section class="slide" data-title="Learning surrogate">
+  <h2>Learning surrogate</h2>
+  <div class="content cols" style="--cols: 0.62fr 1.38fr; --gap: 44px">
+    <div style="align-self:center; font-size: 27px">
+      <p class="i muted">Data generated in different projects can be used for regression analysis</p>
+      <h3>Objectives</h3>
+      <ul>
+        <li>Emulate simulations with estimators
+          <ul><li><b>Estimate the fitness $f(y)$ as a whole</b></li><li>Fast exploration of the parameter space</li></ul>
+        </li>
+        <li>Optimisation
+          <ul><li>Use estimators to find a minimum of $f$</li></ul>
+        </li>
+        <li>Prediction of $f(y)$
+          <ul><li>From random inputs $x$</li></ul>
+        </li>
+      </ul>
+    </div>
+    <div class="full" data-widget="surrogate-demo"></div>
+  </div>
+</section>
+
+<!-- ======== 8 · SPIN ROTATORS MAGNETS · ECR ION SOURCES  (versions: SC magnet / ECRIS) -->
+<section class="slide" data-title="SPIN ROTATORS magnets · ECR ion sources">
+  <h2><span data-for-variant="sc">SPIN ROTATORS magnets</span><span data-for-variant="ecris">Electron cyclotron resonance ion sources</span></h2>
+  <div class="variant-switch"><span class="vs-label">Case:</span><button data-variant="sc">Superconducting magnet</button><button data-variant="ecris">ECR ion source</button></div>
+  <div data-for-variant="sc" class="content cols" style="--cols: 0.9fr 1.1fr; --gap: 40px">
+    <div>
+      <h3>Electron–Ion Collider (EIC)</h3>
+      <ul>
+        <li>Upgrade of the Relativistic Heavy Ion Collider
+          <ul><li>Circumference: 4 km</li></ul>
+        </li>
+        <li>Study of quark and gluon dynamics in nucleons
+          <ul><li>Need magnets to control the spin of electrons</li></ul>
+        </li>
+      </ul>
+      <h3 class="mt-m">SPIN ROTATORS</h3>
+      <ul>
+        <li>Eight Nb-Ti solenoids, 8 T at 1.9 K
+          <ul>
+            <li>SHORT magnets: 2.5 m</li>
+            <li>LONG magnets: 6.3 m</li>
+          </ul>
+        </li>
+        <li>Goal: cost-effectiveness
+          <ul>
+            <li class="hl">Module approach: 1 LONG = 3 SHORT</li>
+            <li>Same conductor (similar to MRI conductors)</li>
+            <li>While SHORT and LONG have different magnetic requirements</li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+    <div class="spin-grid">
+      <figure><img src="assets/img/spin-short-field.jpg" alt="SHORT magnet field map"></figure>
+      <figure><img src="assets/img/spin-short-cryostat.png" alt="SHORT magnet cryostat"></figure>
+      <div class="spin-cap">SHORT magnet</div>
+      <figure data-step><img src="assets/img/spin-long-field.jpg" alt="LONG magnet field map"></figure>
+      <figure data-step="1"><img src="assets/img/spin-long-cryostat.png" alt="LONG magnet cryostat, cut-away"></figure>
+      <div class="spin-cap" data-step="1">LONG magnet</div>
+    </div>
+  </div>
+  <div data-for-variant="ecris" class="content cols" style="--cols: 0.6fr 1.4fr; --gap: 10px">
+    <div style="align-self:center">
+      <h3>LTS/HTS magnet</h3>
+      <ul><li>Interface with RAT and ANSYS</li></ul>
+      <h3 class="mt-m">Plasma simulation</h3>
+      <ul><li>Future work</li></ul>
+      <h3 class="mt-m">Beam extraction</h3>
+      <ul>
+        <li>Interface with IBSimu <span class="muted">(beam dynamics solver)</span></li>
+        <li>Optimisation with evolutionary algorithms</li>
+      </ul>
+    </div>
+    <div class="full ecris-stage" data-widget="ecris-design"></div>
+  </div>
+  <aside class="notes"></aside>
+</section>
+
+<!-- ======== 9 · APPLICATION TO SPIN ROTATORS · ECRIS ELECTRODE OPTIMISATION  (versions: SC magnet / ECRIS) -->
+<section class="slide" data-title="Application to SPIN ROTATORS · ECRIS electrode optimisation">
+  <h2><span data-for-variant="sc">Application to SPIN ROTATORS</span><span data-for-variant="ecris">ECRIS electrode optimisation</span></h2>
+  <div class="variant-switch"><span class="vs-label">Case:</span><button data-variant="sc">Superconducting magnet</button><button data-variant="ecris">ECR ion source</button></div>
+  <div data-for-variant="sc" class="content rows" style="--gap: 18px">
+    <div class="cols" style="--cols: 1fr 1.25fr; --gap: 40px">
+      <div>
+        <p class="mt-0">Compute everything <span class="hl">together</span> in the same workflow: <b>magnetic, mechanical, conductor, quench</b></p>
+        <p class="small muted mt-0">Optimisers compared: random scan, particle swarm optimisation, and combined Bayesian optimisation (BO) + covariance matrix adaptation evolution strategy (CMA-ES)</p>
+        <p class="tiny muted mt-0">Minenna et al. (2026), <a href="https://doi.org/10.2139/ssrn.6641717">doi:10.2139/ssrn.6641717</a></p>
+      </div>
+      <div class="card score-card">
+        <div class="eq">$f(y)=\sum_i w_i\,(y_i-t_i)^2$</div>
+        <ul class="small">
+          <li>Score (log scale)
+            <ul>
+              <li>in T<sup>6</sup>·m<sup>4</sup>·MPa<sup>2</sup>·K<sup>2</sup></li>
+              <li>2 field integrals, 2 fringe fields, max von Mises stress, max hotspot temperature</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="plot-row">
+      <figure data-step="1"><div class="plot"><img src="assets/img/score-random.png" alt="Random scan: fitness score vs simulation index"></div><figcaption><b>Random</b> (benchmark)</figcaption></figure>
+      <figure data-step="2"><div class="plot"><img src="assets/img/score-pso.png" alt="Particle swarm optimisation: fitness score vs simulation index"></div><figcaption><b>Particle swarm optimisation</b></figcaption></figure>
+      <figure data-step="3"><div class="plot"><img src="assets/img/score-combined-bo-cmaes.png" alt="Combined BO and CMA-ES: fitness score vs simulation index"></div><figcaption><b>Combined BO + CMA-ES</b></figcaption></figure>
+    </div>
+  </div>
+  <div data-for-variant="ecris" class="content rows" style="--gap: 14px">
+    <div class="fill" style="flex:1">
+      <video poster="assets/video/ecris-electrode-optimisation-poster.jpg" data-autoplay muted loop playsinline preload="metadata" controls>
+        <source src="assets/video/ecris-electrode-optimisation.mp4" type="video/mp4">
+        <source src="assets/video/ecris-electrode-optimisation.webm" type="video/webm">
+      </video>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================== 10 · CONCLUSION -->
+<section class="slide" data-title="Conclusion" data-last>
+  <h2>Conclusion</h2>
+  <div class="content cols center" style="--cols: 1.25fr 1fr; --gap: 40px">
+    <div class="card">
+      <h3>ALESIA</h3>
+      <ul>
+        <li>New optimisation platform</li>
+        <li>Accelerates the design process: automates the design loop at each phase</li>
+        <li>Optimisation algorithms: GA, DE, PSO, CMA-ES, BO, DNN</li>
+        <li>Holistic understanding of the design</li>
+        <li>Applied to superconducting magnets (LTS and HTS) for accelerators, MRI and fusion</li>
+        <li>Beyond: ECR ion sources and beam dynamics in accelerators</li>
+      </ul>
+    </div>
+    <div class="card white" data-step>
+      <h3>SPIN ROTATORS</h3>
+      <ul>
+        <li>Various configurations tested</li>
+        <li>Solutions obtained with a module approach
+          <ul><li>Cost-effective</li></ul>
+        </li>
+        <li>Optimisation achieved thanks to machine learning and evolutionary algorithms</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- =================================================== 11 · THANK YOU -->
+<section class="slide title-slide thanks" data-chrome="none" data-title="Thank you">
+  <img class="title-logo" src="assets/img/cea-irfu-logo.png" alt="CEA IRFU">
+  <div class="title-block">
+    <h1>Thank you</h1>
+    <p class="subtitle">Any questions?</p>
+    <p class="byline"><b>Damien Minenna</b> · damien.minenna@cea.fr</p>
+  </div>
+  <div class="magnet-stage" data-widget="alesia-hub"></div>
+  <aside class="notes"></aside>
+</section>
+
+<!-- ===================================================== 12 · BACK UP -->
+<section class="slide section-slide no-decor" data-chrome="none" data-title="Back up">
+  <img class="banner" src="assets/img/backup-banner.jpg" alt="">
+  <h2>Back up</h2>
+</section>
+
+<!-- =================================== 13 · SPIN ROTATOR REQUIREMENTS -->
+<section class="slide" data-title="SPIN ROTATOR requirements">
+  <h2>SPIN ROTATOR requirements</h2>
+  <div class="content cols" style="--cols: 1.2fr 0.8fr; --gap: 50px">
+    <div class="rows" style="--gap: 26px">
+      <table class="data">
+        <tr><th>Target for CDR</th><th class="num">SHORT / LONG</th><th class="num">Units</th><th class="num">Weight</th></tr>
+        <tr class="strong"><td>FOM</td><td class="num">15.3 / 46.75</td><td class="num">T·m</td><td class="num">10 000</td></tr>
+        <tr><td>B<sub>quad</sub></td><td class="num">&lt; 1.5</td><td class="num">G</td><td class="num">1 000</td></tr>
+        <tr><td>B<sub>RCS</sub></td><td class="num">&lt; 3</td><td class="num">G</td><td class="num">1 000</td></tr>
+        <tr><td>Von Mises on coil</td><td class="num">&lt; 150</td><td class="num">MPa</td><td class="num">5</td></tr>
+        <tr><td>Hotspot</td><td class="num">&lt; 150</td><td class="num">K</td><td class="num">2</td></tr>
+        <tr><td>T<sub>c</sub> margin</td><td class="num">&gt; 1.2</td><td class="num">K</td><td class="num">10</td></tr>
+      </table>
+      <table class="data">
+        <tr><th>Boundary conditions</th><th class="num">SHORT / LONG</th><th class="num">Units</th></tr>
+        <tr><td>Bore diameter</td><td class="num">100</td><td class="num">mm</td></tr>
+        <tr><td>Cryostat diameter</td><td class="num">≤ 1200</td><td class="num">mm</td></tr>
+        <tr><td>Cryostat length</td><td class="num">≤ 2.5 / 6.3</td><td class="num">m</td></tr>
+      </table>
+      <p class="hl small mt-0">The LONG is more challenging than the SHORT</p>
+    </div>
+    <figure class="full">
+      <div class="fill"><img src="assets/img/spin-geometry.png" alt="SPIN ROTATOR geometry definition (not to scale)"></div>
+      <figcaption>Geometry definition</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ========================================= 14 · SIMULATION WORKFLOW -->
+<section class="slide" data-title="Simulation workflow">
+  <h2>Simulation workflow to be launched in ALESIA</h2>
+  <div class="content rows" style="--gap: 26px">
+    <div class="fill" style="flex:1"><img src="assets/img/simulation-workflow.png" alt="Simulation workflow: three magnetism simulations feed mechanics, conductor design and quench, combined into a score with a feedback loop"></div>
+    <div class="legend" style="justify-content:center">
+      <span><i style="background:var(--c-em)"></i>Electromagnetism</span>
+      <span><i style="background:var(--c-elec)"></i>Electricity</span>
+      <span><i style="background:var(--c-gen)"></i>General / technical</span>
+      <span><i style="background:var(--c-mech)"></i>Mechanics</span>
+      <span><i style="background:var(--c-therm)"></i>Thermics</span>
+      <span><i style="background:var(--c-mat)"></i>Material science</span>
+    </div>
+  </div>
+</section>
+
+<!-- =================================================== 15 · MAGNETISM -->
+<section class="slide" data-title="Magnetism">
+  <h2>Magnetism</h2>
+  <div class="content cols" style="--cols: 0.7fr 1.3fr; --gap: 40px">
+    <div>
+      <h3>Inputs</h3>
+      <ul><li>Coil dimensions</li><li>Yoke dimensions</li><li>Engineering current density</li></ul>
+      <h3 class="mt-m">Outputs</h3>
+      <ul>
+        <li>Magnetic field
+          <ul><li>Peak</li><li>Stray field</li></ul>
+        </li>
+        <li>Magnetic energy</li>
+        <li>Figure of merit</li>
+        <li>Laplace forces</li>
+      </ul>
+      <h3 class="mt-m">Ongoing</h3>
+      <ul><li>3D simulations</li></ul>
+    </div>
+    <div class="rows" style="height:100%">
+      <img class="logo-chip" src="assets/img/logo-opera.png" alt="Opera simulation software" style="align-self:flex-end">
+      <div class="fill" style="flex:1"><img src="assets/img/magnetism-fieldmap.png" alt="2D axisymmetric magnetic field map"></div>
+    </div>
+  </div>
+</section>
+
+<!-- =================================================== 16 · MECHANICS -->
+<section class="slide" data-title="Mechanics">
+  <h2>Mechanics</h2>
+  <div class="content cols" style="--cols: 0.8fr 1.2fr; --gap: 40px">
+    <div class="small">
+      <h3>Rule of mixtures</h3>
+      <ul>
+        <li>Averaging mechanical properties
+          <ul><li>According to proportions</li><li>Conductor as one composite</li></ul>
+        </li>
+        <li>Allows fast simulations</li>
+      </ul>
+      <h3 class="mt-m">Inputs</h3>
+      <ul><li>Coil, mandrel and yoke dimensions</li><li>Material properties</li><li>Magnetic map</li></ul>
+      <h3 class="mt-m">Outputs</h3>
+      <ul><li>Von Mises stress</li><li>Displacements</li></ul>
+      <h3 class="mt-m">Ongoing</h3>
+      <ul><li>3D conductor model</li></ul>
+    </div>
+    <div class="rows" style="height:100%; --gap: 18px">
+      <div style="display:flex; gap:16px; align-items:center; justify-content:flex-end"><img class="logo-chip" src="assets/img/logo-opera.png" alt="Opera"><img class="logo-chip" src="assets/img/logo-cast3m.png" alt="Cast3M"></div>
+      <div class="cols" style="--cols: 0.8fr 1fr; --gap: 30px; flex:1; min-height:0; align-items:stretch">
+        <figure class="full">
+          <div class="fill"><img src="assets/img/mechanics-3d-conductor.png" alt="3D conductor model"></div>
+          <figcaption>3D conductor model (ongoing)</figcaption>
+        </figure>
+        <figure class="full">
+          <div class="fill"><img src="assets/img/mechanics-model.png" alt="Axisymmetric mechanical model"></div>
+          <figcaption>Mechanical model (axisymmetric, R–Z)</figcaption>
+        </figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================== 17 · CONDUCTOR & QUENCH -->
+<section class="slide" data-title="Conductor & Quench">
+  <h2>Conductor &amp; Quench</h2>
+  <div class="content cols" style="--cols: 1fr 0.85fr 1fr; --gap: 34px">
+    <div class="small">
+      <h3>Fits implemented</h3>
+      <ul>
+        <li>Nb-Ti
+          <ul><li class="muted">Bottura, IEEE TAS (2000)</li></ul>
+        </li>
+        <li>Nb<sub>3</sub>Sn, from Stacchi <span class="muted">(private communication)</span>
+          <ul><li>ITER IT</li><li>ITER DTT</li><li>MQXF</li></ul>
+        </li>
+        <li>HTS
+          <ul><li>Fujikura, <span class="muted">from Fleiter &amp; Ballarino, internal note (2014)</span></li></ul>
+        </li>
+      </ul>
+      <h3 class="mt-m">Conductors</h3>
+      <ul>
+        <li>Margins
+          <ul><li>Load line</li><li>Temperature</li><li>Current density</li></ul>
+        </li>
+        <li>Sc area</li>
+      </ul>
+    </div>
+    <figure class="full">
+      <div class="fill"><img src="assets/img/conductor-jc-fit.png" alt="Critical current density versus field with load line"></div>
+    </figure>
+    <div class="small">
+      <h3>Quench</h3>
+      <ul>
+        <li><span class="muted">From Wilson, Superconducting Magnets (2002)</span>
+          <ul>
+            <li>Adiabatic propagation velocity</li>
+            <li>Minimum propagating zone (MPZ)</li>
+            <li>Minimum quench energy (MQE)</li>
+          </ul>
+        </li>
+        <li>Hotspot temperature
+          <ul><li>From heat balance equation</li></ul>
+        </li>
+      </ul>
+      <div class="eq">$$\int_0^{t_d} J_p^2(t)\,dt=\int_{T_{op}}^{T_m}\gamma\,\frac{C_p(T)}{\rho(T)}\,dT$$</div>
+      <h3 class="mt-s">Ongoing</h3>
+      <ul><li>THEA model</li><li>Qtransit</li></ul>
+    </div>
+  </div>
+</section>
+
+<!-- =================================== 18 · THE ELECTRON–ION COLLIDER -->
+<section class="slide" data-title="The Electron–Ion Collider">
+  <h2>The Electron–Ion Collider / CEA contributions</h2>
+  <div class="content cols" style="--cols: 1.25fr 0.75fr; --gap: 40px">
+    <div class="small">
+      <p class="i muted mt-0">Understand how the strong interaction creates 99% of the visible mass of the universe</p>
+      <div class="cols" style="--gap: 34px">
+        <div>
+          <h3>Goals</h3>
+          <ul>
+            <li>3D imaging of protons and atomic nuclei</li>
+            <li>Study of quark and gluon dynamics in nucleons</li>
+            <li>Understanding the proton spin
+              <ul><li>Need to control the spin of electrons</li></ul>
+            </li>
+          </ul>
+          <h3 class="mt-m">Machine</h3>
+          <ul>
+            <li>Upgrade of the Relativistic Heavy Ion Collider</li>
+            <li>Circumference: 4 km</li>
+            <li>High luminosity</li>
+            <li>Highly spin-polarised beams</li>
+            <li>Centre-of-mass energy 29–140 GeV</li>
+            <li>Ion species from proton to uranium</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Detector magnet</h3>
+          <ul>
+            <li><span class="hl">MARCO</span>
+              <ul><li>1 solenoid</li><li>2 T, 2.84 m bore diameter, 3.84 m long</li></ul>
+            </li>
+          </ul>
+          <h3 class="mt-m">Accelerator magnets</h3>
+          <ul>
+            <li><span class="hl">SPIN ROTATORS</span>
+              <ul>
+                <li>4 SHORT solenoids: 8 T, 100 mm bore diameter, 2.5 m long</li>
+                <li>4 LONG solenoids: 8 T, 100 mm bore diameter, 6.3 m long</li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <figure class="full">
+      <div class="fill"><img src="assets/img/eic-layout.jpg" alt="EIC layout at Brookhaven with the locations of MARCO and the SPIN ROTATORS"></div>
+    </figure>
+  </div>
+</section>
+
+<!-- ================================= 19 · SPIN ROTATORS DATA ANALYSIS -->
+<section class="slide" data-title="SPIN ROTATORS data analysis">
+  <h2>SPIN ROTATORS data analysis</h2>
+  <div class="content cols" style="--cols: 1.1fr 0.9fr; --gap: 40px">
+    <div class="small">
+      <h3>Nb-Ti at 1.9 K</h3>
+      <ul>
+        <li>Comparison between LONG and SHORT simulations</li>
+        <li>From <span class="hl">valid solutions</span>
+          <ul><li>Where project requirements and physics constraints are met</li></ul>
+        </li>
+        <li>Find solutions allowing the module approach
+          <ul>
+            <li>1 LONG = 3 SHORT</li>
+            <li>Same wire-in-channel (WIC) conductor</li>
+          </ul>
+        </li>
+      </ul>
+      <div>
+        <h3 class="mt-m">In addition: various tested configurations</h3>
+        <ul>
+          <li>Nb-Ti: no LONG solutions found at 4.5 K</li>
+          <li>Nb<sub>3</sub>Sn: solutions found at 4.5 K</li>
+          <li>Layouts
+            <ul>
+              <li>With or without a mandrel</li>
+              <li>Cold or warm yoke</li>
+            </ul>
+          </li>
+          <li><span class="hl">500 000 simulations in 3 years</span></li>
+        </ul>
+      </div>
+    </div>
+    <figure class="full">
+      <div class="fill"><img src="assets/img/spin-design-selection.png" alt="Conductor Cu/Sc ratio vs conductor Sc area, valid solutions for SHORT and LONG"></div>
+      <figcaption>Only valid solutions</figcaption>
+    </figure>
+  </div>
+</section>
+
+</div>
+
+<!-- maths (bundled, works offline) -->
+<script src="vendor/katex/katex.min.js"></script>
+<script src="vendor/katex/auto-render.min.js"></script>
+<!-- engine -->
+<script src="engine/deck.js"></script>
+<!-- widgets: add your own <script src="widgets/…"> here -->
+<script src="widgets/magnet-design.js"></script>
+<script src="widgets/alesia-windows.js"></script>
+<script src="widgets/alesia-stack.js"></script>
+<script src="widgets/diagrams.js"></script>
+<script src="widgets/optim-runs.js"></script>
+<script src="widgets/optim-demo.js"></script>
+<script src="widgets/surrogate-run.js"></script>
+<script src="widgets/surrogate-demo.js"></script>
+</body>
+</html>
