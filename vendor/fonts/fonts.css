@@ -1,0 +1,8 @@
+/* Poppins (SIL Open Font License 1.1), Latin subset, bundled so the deck works offline. */
+@font-face { font-family: 'Poppins'; font-style: normal; font-weight: 300; font-display: swap; src: url(poppins-Light.woff) format('woff'); }
+@font-face { font-family: 'Poppins'; font-style: normal; font-weight: 400; font-display: swap; src: url(poppins-Regular.woff) format('woff'); }
+@font-face { font-family: 'Poppins'; font-style: italic; font-weight: 400; font-display: swap; src: url(poppins-Italic.woff) format('woff'); }
+@font-face { font-family: 'Poppins'; font-style: normal; font-weight: 500; font-display: swap; src: url(poppins-Medium.woff) format('woff'); }
+@font-face { font-family: 'Poppins'; font-style: italic; font-weight: 500; font-display: swap; src: url(poppins-MediumItalic.woff) format('woff'); }
+@font-face { font-family: 'Poppins'; font-style: normal; font-weight: 600 800; font-display: swap; src: url(poppins-Bold.woff) format('woff'); }
+@font-face { font-family: 'Poppins'; font-style: italic; font-weight: 600 800; font-display: swap; src: url(poppins-BoldItalic.woff) format('woff'); }

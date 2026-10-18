@@ -1,0 +1,231 @@
+/* deck.css — engine mechanics only (stage, transitions, steps, tools, overlays).
+   Colours and typography of the slides themselves live in theme/theme.css. */
+
+:root {
+  --deck-accent: #E50019;
+  --deck-ui-bg: rgba(255, 255, 255, .97);
+  --deck-ui-ink: #3a3a40;
+  --deck-ui-line: rgba(229, 0, 25, .16);
+  --deck-dur: .55s;
+  --deck-ease: cubic-bezier(.22, .8, .2, 1);
+}
+
+html, body.deck-body { margin: 0; height: 100%; overflow: hidden; background: #fff; }
+body.deck-body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+.deck-viewport { position: fixed; inset: 0; overflow: hidden; background: #fff; }
+
+.deck {
+  position: absolute; left: 0; top: 0;
+  width: 1920px; height: 1080px;
+  transform-origin: 0 0;
+  overflow: hidden;
+  background: #fff;
+}
+
+/* ---------------------------------------------------------------- slides */
+.deck > .slide {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  box-sizing: border-box;
+  opacity: 0; visibility: hidden;
+  transform: translate3d(36px, 0, 0);
+  transition: opacity var(--deck-dur) var(--deck-ease), transform var(--deck-dur) var(--deck-ease), visibility 0s linear var(--deck-dur);
+  pointer-events: none;
+}
+.deck > .slide.past { transform: translate3d(-36px, 0, 0); }
+.deck > .slide.active {
+  opacity: 1; visibility: visible; transform: none; pointer-events: auto;
+  transition: opacity var(--deck-dur) var(--deck-ease), transform var(--deck-dur) var(--deck-ease), visibility 0s;
+  z-index: 1;
+}
+.deck[data-transition="fade"] > .slide { transform: none; }
+.deck[data-transition="none"] > .slide { transition: none !important; transform: none; }
+.deck.deck-instant > .slide, .deck.deck-instant .step { transition: none !important; }
+
+aside.notes { display: none !important; }
+.deck-variant-off { display: none !important; }
+
+/* performance: slides that are not shown do not animate */
+.deck > .slide:not(.active) *,
+.deck > .slide:not(.active) *::before,
+.deck > .slide:not(.active) *::after { animation-play-state: paused !important; }
+/* copies of slides (overview, speaker view) are still pictures */
+.deck-clone *, .deck-clone *::before, .deck-clone *::after { animation-play-state: paused !important; }
+.deck-goto.deck-toast { top: auto; bottom: 40px; }
+
+/* ----------------------------------------------------------------- steps */
+.step {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  transition: opacity .5s var(--deck-ease), transform .6s var(--deck-ease), filter .5s, background-color .4s, color .4s;
+}
+.step.step-visible { opacity: 1; transform: none; }
+.step[data-anim="fade"] { transform: none; }
+.step[data-anim="down"] { transform: translate3d(0, -18px, 0); }
+.step[data-anim="left"] { transform: translate3d(28px, 0, 0); }
+.step[data-anim="right"] { transform: translate3d(-28px, 0, 0); }
+.step[data-anim="zoom"] { transform: scale(.88); }
+.step[data-anim="grow"] { transform: scaleX(0); transform-origin: left center; }
+.step[data-anim="blur"] { filter: blur(8px); transform: none; }
+.step.step-visible[data-anim] { transform: none; filter: none; }
+/* "highlight": always visible, gets emphasised when its step is reached */
+.step[data-anim="highlight"] { opacity: 1; transform: none; }
+.step[data-anim="highlight"].step-visible { color: var(--deck-accent); }
+/* dim earlier steps when the slide asks for it: <section data-dim-past> */
+.slide[data-dim-past] .step.step-visible:not(.step-current) { opacity: .38; }
+
+/* -------------------------------------------------------------- overlays */
+.deck-ink, .deck-laser {
+  position: absolute; left: 0; top: 0;
+  width: 100%; height: 100%;
+  z-index: 50; pointer-events: none; touch-action: none;
+}
+.deck-laser { z-index: 51; }
+body[data-deck-tool="pen"] .deck-ink,
+body[data-deck-tool="highlighter"] .deck-ink { cursor: crosshair; }
+body[data-deck-tool="eraser"] .deck-ink { cursor: cell; }
+body[data-deck-tool="laser"] .deck-viewport, body[data-deck-tool="laser"] .deck-viewport * { cursor: none !important; }
+body.deck-idle, body.deck-idle * { cursor: none !important; }
+
+.deck-progress {
+  position: absolute; left: 0; bottom: 0; height: 4px; width: 100%;
+  background: linear-gradient(90deg, #ff8a97, var(--deck-accent));
+  transform-origin: left center; transform: scaleX(0);
+  transition: transform .6s var(--deck-ease);
+  z-index: 40; opacity: .85;
+}
+body.deck-on-first .deck-progress { opacity: 0; }
+
+.deck-blank { position: fixed; inset: 0; z-index: 900; pointer-events: none; opacity: 0; transition: opacity .3s; }
+.deck-blank.show { opacity: 1; pointer-events: auto; }
+.deck-blank.black { background: #000; }
+.deck-blank.white { background: #fff; }
+
+.deck-goto {
+  position: fixed; left: 50%; top: 28px; transform: translate(-50%, -12px);
+  background: var(--deck-ui-bg); color: var(--deck-ui-ink);
+  border: 1px solid var(--deck-ui-line); border-radius: 999px;
+  padding: 8px 18px; font: 500 15px/1.2 Poppins, system-ui, sans-serif;
+  box-shadow: 0 8px 30px rgba(120, 0, 15, .12);
+  opacity: 0; transition: opacity .2s, transform .2s; z-index: 950; pointer-events: none;
+}
+.deck-goto.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* --------------------------------------------------------------- toolbar */
+.deck-toolbar {
+  position: fixed; right: 18px; bottom: 18px; z-index: 800;
+  display: flex; align-items: center; gap: 2px;
+  padding: 6px 8px;
+  background: var(--deck-ui-bg);
+  border: 1px solid var(--deck-ui-line);
+  border-radius: 14px;
+  box-shadow: 0 10px 34px rgba(120, 0, 15, .14);
+  opacity: 0; transform: translateY(8px); pointer-events: none;
+  transition: opacity .25s, transform .25s;
+  font: 500 13px/1 Poppins, system-ui, sans-serif; color: var(--deck-ui-ink);
+}
+.deck-toolbar.show { opacity: 1; transform: none; pointer-events: auto; }
+.deck-btn {
+  all: unset; box-sizing: border-box;
+  width: 34px; height: 34px; border-radius: 9px;
+  display: grid; place-items: center; cursor: pointer;
+  color: var(--deck-ui-ink); transition: background .15s, color .15s;
+}
+.deck-btn:hover { background: rgba(229, 0, 25, .08); color: var(--deck-accent); }
+.deck-btn.on { background: var(--deck-accent); color: #fff; }
+.deck-btn:focus-visible { outline: 2px solid var(--deck-accent); outline-offset: 1px; }
+.deck-sep { width: 1px; height: 20px; background: var(--deck-ui-line); margin: 0 5px; }
+.deck-swatches { display: flex; gap: 5px; padding: 0 4px 0 6px; }
+.deck-swatch {
+  all: unset; width: 18px; height: 18px; border-radius: 50%; cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .15); transition: transform .15s;
+}
+.deck-swatch.on { box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px var(--deck-ui-ink); }
+.deck-swatch:hover { transform: scale(1.15); }
+.deck-counter { padding: 0 6px 0 10px; font-variant-numeric: tabular-nums; color: #8a8a92; min-width: 52px; text-align: right; }
+
+/* -------------------------------------------------------------- overview */
+.deck-overview {
+  position: fixed; inset: 0; z-index: 850; overflow: auto;
+  background: #fdf6f7;
+  opacity: 0; transition: opacity .25s;
+  padding: 42px 48px;
+  box-sizing: border-box;
+}
+.deck-overview.show { opacity: 1; }
+.deck-ov-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 26px; max-width: 1800px; margin: 0 auto; }
+.deck-ov-card {
+  all: unset; cursor: pointer; display: block;
+  border-radius: 12px; padding: 8px; transition: background .15s, transform .15s;
+}
+.deck-ov-card.sel { background: rgba(229, 0, 25, .09); }
+.deck-ov-card.current .deck-ov-frame { box-shadow: 0 0 0 3px var(--deck-accent), 0 10px 26px rgba(120, 0, 15, .15); }
+.deck-ov-frame {
+  position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden;
+  border-radius: 8px; background: #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .07), 0 6px 18px rgba(120, 0, 15, .08);
+}
+.deck-ov-frame > .slide, .pv-frame > .slide {
+  position: absolute !important; left: 0; top: 0;
+  width: 1920px !important; height: 1080px !important; box-sizing: border-box;
+  transform: scale(var(--s, .16)) !important; transform-origin: 0 0;
+  opacity: 1 !important; visibility: visible !important;
+  transition: none !important; pointer-events: none !important;
+}
+.deck-clone .step { transition: none !important; }
+.deck-ov-label { font: 400 14px/1.3 Poppins, system-ui, sans-serif; color: #55555c; padding: 9px 4px 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.deck-ov-label b { color: var(--deck-accent); font-weight: 600; margin-right: 6px; }
+
+/* ------------------------------------------------------------------ help */
+.deck-help { position: fixed; inset: 0; z-index: 870; display: grid; place-items: center; background: rgba(255, 255, 255, .82); }
+.deck-help-card {
+  background: #fff; border-radius: 18px; padding: 28px 36px 22px;
+  box-shadow: 0 24px 70px rgba(120, 0, 15, .2); border: 1px solid var(--deck-ui-line);
+  font: 400 15px/1.5 Poppins, system-ui, sans-serif; color: #333;
+}
+.deck-help-card h3 { margin: 0 0 12px; color: var(--deck-accent); font-weight: 600; font-size: 18px; }
+.deck-help-card td { padding: 5px 18px 5px 0; }
+.deck-help-card p { margin: 14px 0 0; color: #888; font-size: 13px; }
+.deck-help kbd, .deck-help-card kbd {
+  font: 500 13px/1 Poppins, system-ui, sans-serif; background: #fdf0f1; color: #8a0010;
+  border: 1px solid #f6c9cf; border-radius: 6px; padding: 3px 7px; white-space: nowrap;
+}
+
+/* ---------------------------------------------------------- speaker view */
+.deck-presenter-body { margin: 0; height: 100vh; overflow: hidden; background: #f7f3f4; font-family: Poppins, system-ui, sans-serif; color: #2a2a2e; }
+.pv { display: grid; grid-template-columns: 1.65fr 1fr; grid-template-rows: auto 1fr; gap: 18px; height: 100vh; padding: 18px; box-sizing: border-box; }
+.pv-head { grid-column: 1 / -1; display: flex; align-items: center; gap: 24px; font-size: 18px; }
+.pv-count { flex: 1; color: #666; }
+.pv-timer { font-size: 34px; font-weight: 600; color: var(--deck-accent); cursor: pointer; font-variant-numeric: tabular-nums; }
+.pv-clock { font-size: 20px; color: #888; font-variant-numeric: tabular-nums; }
+.pv-cur, .pv-side { min-height: 0; display: flex; flex-direction: column; gap: 10px; }
+.pv-frame { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; background: #fff; border-radius: 10px; box-shadow: 0 6px 22px rgba(120, 0, 15, .12); }
+.pv-label { font-size: 13px; text-transform: uppercase; letter-spacing: .12em; color: #a0a0a8; margin-top: 4px; }
+.pv-notes { flex: 1; overflow: auto; font-size: 21px; line-height: 1.5; background: #fff; border-radius: 10px; padding: 16px 20px; box-shadow: 0 6px 22px rgba(120, 0, 15, .08); }
+.pv-notes ul { padding-left: 1.1em; margin: .2em 0; }
+.pv-muted, .pv-end { color: #aaa; }
+.pv-end { display: grid; place-items: center; height: 100%; font-size: 20px; }
+
+/* ----------------------------------------------------------------- print */
+@page { size: 1920px 1080px; margin: 0; }
+@media print {
+  html, body.deck-body { height: auto; overflow: visible; }
+  .deck-viewport { position: static; overflow: visible; }
+  .deck { position: static; transform: none !important; width: 1920px; height: auto !important; overflow: visible; }
+  .deck > .slide {
+    position: relative !important; inset: auto;
+    width: 1920px; height: 1080px;
+    opacity: 1 !important; visibility: visible !important; transform: none !important;
+    transition: none !important;
+    page-break-after: always; break-after: page; break-inside: avoid;
+  }
+  .step { opacity: 1 !important; transform: none !important; filter: none !important; transition: none !important; }
+  .deck-ink, .deck-laser, .deck-progress, .deck-toolbar, .deck-overview, .deck-help, .deck-blank, .deck-goto { display: none !important; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deck > .slide { transform: none !important; }
+  .step { transform: none !important; }
+}

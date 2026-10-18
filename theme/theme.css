@@ -1,0 +1,293 @@
+/* theme.css — look of the slides (colours, type, layouts, components).
+   Everything is scoped to .slide so clones in the overview / speaker view
+   look identical. Slide canvas is 1920 × 1080 px. */
+
+:root {
+  --red: #E50019;          /* CEA red */
+  --red-700: #b40014;
+  --red-400: #ef5466;
+  --red-300: #f48d99;
+  --red-200: #f9c3ca;
+  --red-100: #fde4e7;
+  --red-50:  #fff5f6;
+  --ink:   #1f1f24;
+  --ink-2: #46464e;
+  --ink-3: #8a8a93;
+  --line:  #ece5e6;
+  --bg:    #ffffff;
+  /* semantic colours from the ALESIA diagrams */
+  --c-em:    #ec5b6b;   /* electromagnetism */
+  --c-elec:  #ff9a85;   /* electricity      */
+  --c-gen:   #c7c7c9;   /* general / tech.  */
+  --c-mech:  #92b2ff;   /* mechanics        */
+  --c-therm: #ffe970;   /* thermics         */
+  --c-mat:   #d1a083;   /* material science */
+  --c-local: #7c7e9e;
+  --c-disc:  #8cc47a;
+  --font: 'Poppins', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+}
+
+.slide {
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 30px/1.45 var(--font);
+  padding: 62px 96px 128px;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.slide *, .slide *::before, .slide *::after { box-sizing: border-box; }
+
+/* top-right isometric cubes (CEA graphic identity) */
+.slide::before {
+  content: ''; position: absolute; top: 0; right: 0;
+  width: 560px; height: 190px;
+  background: url(cubes.svg) no-repeat right top;
+  pointer-events: none; z-index: 0;
+}
+.slide.no-decor::before { display: none; }
+
+/* -------------------------------------------------------------- headings */
+.slide > h2, .slide .slide-title {
+  position: relative; z-index: 1;
+  margin: 0 0 34px; max-width: 1380px;
+  font-size: 58px; line-height: 1.12; font-weight: 700; letter-spacing: -.015em;
+  color: var(--red);
+}
+.slide > h2 small { display: block; font-size: .5em; color: var(--ink-3); font-weight: 400; letter-spacing: 0; margin-top: 6px; }
+.slide h3 { margin: 0 0 .3em; font-size: 30px; font-weight: 700; color: var(--ink); line-height: 1.3; }
+.slide h3 + ul { margin-top: 0; }
+.slide h4 { margin: 0 0 .2em; font-size: 24px; font-weight: 600; color: var(--red-700); text-transform: uppercase; letter-spacing: .08em; }
+.slide p { margin: 0 0 .6em; }
+
+.content { position: relative; z-index: 1; flex: 1; min-height: 0; }
+
+/* ----------------------------------------------------------------- lists */
+.slide ul { list-style: none; margin: 0 0 .55em; padding: 0; }
+.slide li { position: relative; padding-left: 1.05em; margin: .14em 0; }
+.slide li::before {
+  content: ''; position: absolute; left: .08em; top: .6em;
+  width: .3em; height: .3em; background: var(--red);
+}
+.slide li li { font-size: .85em; margin: .08em 0; }
+.slide li li::before { background: var(--ink); width: .26em; height: .26em; top: .62em; }
+.slide li li li { font-size: .92em; }
+.slide li li li::before { background: var(--ink-3); border-radius: 50%; }
+.slide li > ul { margin: .08em 0 .1em; }
+.slide ul.plain li { padding-left: 0; }
+.slide ul.plain li::before { display: none; }
+.slide ol { margin: 0 0 .5em; padding-left: 1.2em; }
+.slide ol li { padding-left: .2em; }
+.slide ol li::before { display: none; }
+.slide ol li::marker { color: var(--red); font-weight: 600; }
+
+/* --------------------------------------------------------------- inline */
+.hl { color: var(--red); font-weight: 700; }
+.hl-local { color: var(--c-local); font-weight: 700; }
+.hl-disc { color: var(--c-disc); font-weight: 700; }
+.hl-global { color: #960e24; font-weight: 700; }      /* global minimum: dark red (slide 4 map) */
+.hl-localmin { color: #e0606f; font-weight: 700; }    /* local minima: lighter red */
+.hl-disc { color: #10a845; font-weight: 700; }        /* discontinuities: green */
+.hl-red { color: var(--red); font-weight: 700; }
+.b { font-weight: 700; }
+.i { font-style: italic; }
+.muted { color: var(--ink-3); }
+.small { font-size: .8em; }
+.tiny { font-size: .62em; }
+.mono { font-family: var(--mono); font-size: .9em; }
+.slide a { color: var(--red); text-decoration: none; border-bottom: 1px solid var(--red-200); }
+.slide a:hover { border-bottom-color: var(--red); }
+.pill {
+  display: inline-block; vertical-align: .12em;
+  font-size: .62em; font-weight: 600; line-height: 1;
+  padding: .38em .8em; border-radius: 999px;
+  background: var(--red-100); color: var(--red-700);
+}
+.pill.solid { background: var(--red); color: #fff; }
+
+/* --------------------------------------------------------------- layout */
+.cols {
+  display: grid; grid-template-columns: var(--cols, 1fr 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: var(--gap, 64px); align-items: start;
+}
+.cols > * { min-width: 0; min-height: 0; }
+.cols.center { align-items: center; }
+.cols.stretch, .cols.full { align-items: stretch; height: 100%; }
+.rows { display: flex; flex-direction: column; gap: var(--gap, 24px); }
+.full { height: 100%; }
+.fill {
+  height: 100%; min-height: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.fill > img, .fill > video { width: 100%; height: 100%; object-fit: contain; display: block; }
+.fill > svg { max-width: 100%; max-height: 100%; display: block; }
+.fill.no-upscale > img { width: auto; height: auto; max-width: 100%; max-height: 100%; }
+.center-x { margin-left: auto; margin-right: auto; text-align: center; }
+.mt-0 { margin-top: 0 !important; } .mt-s { margin-top: 14px; } .mt-m { margin-top: 30px; } .mt-l { margin-top: 56px; }
+
+/* ---------------------------------------------------------------- cards */
+.card {
+  background: var(--red-50);
+  border: 1px solid var(--red-100);
+  border-radius: 22px;
+  padding: 28px 34px 22px;
+}
+.card.white { background: #fff; border-color: var(--line); box-shadow: 0 14px 40px rgba(140, 0, 20, .06); }
+.card > h3:first-child { margin-top: 0; }
+.card.accent { border-left: 6px solid var(--red); }
+
+/* --------------------------------------------------------------- figures */
+.slide figure { margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 0; }
+.slide figure img { max-width: 100%; display: block; }
+.slide figcaption { margin-top: 10px; font-size: 21px; color: var(--ink-3); text-align: center; line-height: 1.35; }
+.slide figcaption b { color: var(--ink-2); font-weight: 600; }
+.shadow { border-radius: 12px; box-shadow: 0 14px 40px rgba(60, 0, 10, .10); }
+.logo-chip { height: 96px; width: auto; border-radius: 8px; }
+
+.cite {
+  position: absolute; left: 96px; bottom: 100px; z-index: 2;
+  font-size: 18px; color: var(--ink-3);
+}
+.cite a { color: inherit; border-bottom-color: var(--line); }
+
+/* ---------------------------------------------------------------- tables */
+table.data { border-collapse: collapse; font-size: 24px; line-height: 1.3; width: 100%; }
+table.data th {
+  text-align: left; font-weight: 600; color: var(--red-700);
+  background: var(--red-50); padding: 12px 18px;
+  border-bottom: 2px solid var(--red-200);
+}
+table.data td { padding: 10px 18px; border-bottom: 1px solid var(--line); }
+table.data td.num, table.data th.num { text-align: center; font-variant-numeric: tabular-nums; }
+table.data tr.strong td { font-weight: 600; }
+
+/* ----------------------------------------------------------------- maths */
+.slide .katex { font-size: 1.04em; }
+.eq { font-size: 1.1em; margin: .3em 0 .5em; }
+.eq .katex-display { margin: .2em 0; text-align: left; }
+
+/* --------------------------------------------------------------- footer */
+.slide-footer {
+  position: absolute; left: 56px; right: 64px; bottom: 30px; z-index: 3;
+  display: flex; align-items: center; gap: 30px;
+  font-size: 19px; color: var(--ink-3); line-height: 1;
+}
+.slide-footer-logo { width: 46px; height: 46px; display: block; }
+.slide-footer-text { flex: 1; }
+.slide-footer-date { font-variant-numeric: tabular-nums; }
+.slide-footer-num { min-width: 40px; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--red); font-weight: 700; font-size: 22px; }
+
+/* ---------------------------------------------------------- title slide */
+.slide.title-slide { padding: 0; }
+.title-slide .title-logo { position: absolute; left: 96px; top: 66px; height: 118px; z-index: 2; }
+.title-slide .title-block { position: absolute; left: 400px; top: 64px; z-index: 2; }
+.title-slide h1 {
+  margin: 0; font-size: 76px; line-height: 1.05; font-weight: 600; letter-spacing: -.02em; color: var(--ink);
+}
+.title-slide h1 em { font-style: normal; color: var(--red); }
+.title-slide .subtitle { margin: 14px 0 0; font-size: 30px; color: var(--ink-2); font-weight: 400; }
+.title-slide .byline { margin: 14px 0 0; font-size: 21px; line-height: 1.5; color: var(--ink-3); }
+.title-slide .byline b { color: var(--ink-2); font-weight: 600; }
+.title-slide .byline .coauthors { color: var(--ink); font-weight: 400; }
+
+/* --------------------------------------------------------- section slide */
+.slide.section-slide { justify-content: center; padding-left: 160px; }
+.section-slide .banner { position: absolute; left: 0; right: 0; top: 0; height: 380px; object-fit: cover; width: 100%; }
+.section-slide h2 { font-size: 96px; font-weight: 500; color: var(--ink); margin: 260px 0 0; }
+.section-slide h2::before { content: ''; display: block; width: 90px; height: 8px; background: var(--red); margin-bottom: 30px; }
+
+/* ------------------------------------------------------------ thank you */
+.slide.thanks-slide { justify-content: center; align-items: flex-start; padding-left: 160px; }
+.thanks-slide .title-logo { height: 150px; margin-bottom: 70px; }
+.thanks-slide h2 { font-size: 110px; color: var(--ink); font-weight: 500; margin: 0 0 30px; }
+.thanks-slide p { font-size: 32px; color: var(--ink-2); }
+
+/* ------------------------------------------------- legend chips (diagrams) */
+.legend { display: flex; flex-wrap: wrap; gap: 10px 26px; font-size: 21px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 9px; }
+.legend i { width: 22px; height: 22px; border-radius: 5px; display: inline-block; }
+
+/* title-slide animation area (magnet-design widget) */
+.title-slide .magnet-stage { position: absolute; left: 0; right: 0; top: 262px; height: 818px; z-index: 1; }
+
+/* ---------------------------------------------------- slide-specific bits */
+.spin-grid {
+  display: grid; grid-template-columns: 1.5fr 1fr; grid-template-rows: 1fr auto 1fr auto;
+  gap: 6px 22px; height: 100%; min-height: 0;
+}
+.spin-grid figure { min-height: 0; height: 100%; justify-content: center; }
+.spin-grid img { max-height: 100%; object-fit: contain; }
+.spin-cap { grid-column: 1 / -1; text-align: center; font-size: 22px; color: var(--ink-3); font-weight: 500; margin-bottom: 8px; }
+
+.plot-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; flex: 1; min-height: 0; }
+.plot-row figure { min-height: 0; }
+.plot { position: relative; height: 100%; min-height: 0; display: flex; justify-content: center; }
+.plot img { max-height: 100%; max-width: 100%; object-fit: contain; display: block; }
+.ring { position: absolute; border: 4px solid var(--red); border-radius: 50%; pointer-events: none; }
+.valid-tag {
+  position: absolute; right: 8px; top: 196px; z-index: 3;
+  color: var(--red); font-weight: 700; font-size: 26px;
+}
+.score-card { padding: 16px 26px 6px; }
+.score-card .eq { margin: 0 0 4px; }
+
+.algo .fill img { max-height: 100%; }
+.slide figure > .fill { flex: 1; height: auto; min-height: 0; width: 100%; }
+
+/* thank-you slide reuses the title-slide layout */
+.title-slide.thanks .magnet-stage { top: 250px; height: 830px; }
+.slide video { width: 100%; height: 100%; object-fit: contain; display: block; background: #fff; }
+.ecris-stage { margin-right: -60px; }
+
+/* long single-line title (slide 3) */
+.slide > h2.h2-long { font-size: 52px; max-width: 1480px; white-space: nowrap; }
+
+/* buttons switching between the versions of a slide (data-variant, see deck.js) */
+.variant-switch {
+  position: absolute; left: 90px; top: 12px; z-index: 5;  /* top left, above the title */
+  align-items: center;
+  display: flex; padding: 4px; gap: 4px;
+  background: #fff; border: 1.5px solid var(--red-200); border-radius: 999px;
+  box-shadow: 0 6px 18px rgba(140, 0, 20, .08);
+}
+.variant-switch button {
+  font: 600 17px/1 var(--font); letter-spacing: .01em;
+  padding: 8px 16px; border: 0; border-radius: 999px; cursor: pointer;
+  background: transparent; color: var(--ink-3); transition: background .2s, color .2s;
+}
+.variant-switch button:hover { color: var(--red); }
+.variant-switch button.on { background: var(--red); color: #fff; }
+@media print { .variant-switch { display: none; } }
+
+/* slide 5: text that follows the optimiser running in the live example (optim-demo) */
+.od-side { display: flex; flex-direction: column; gap: 16px; font-size: 22px; line-height: 1.38; align-self: center; }
+.od-side .card { padding: 18px 24px 14px; border-radius: 18px; }
+.od-side .card h3 { font-size: 25px; margin-bottom: .2em; }
+.od-side ul { margin: 0; }
+.od-side p { margin: 0; }
+.od-method { background: #fff; border: 1.5px solid var(--red-200); box-shadow: 0 10px 28px rgba(140, 0, 20, .07); height: 226px; }
+.od-method h3 { color: var(--red); font-size: 29px !important; }
+.od-method .od-key { margin-top: 8px; color: var(--ink); font-size: 23px; }
+.od-method .od-key b { color: var(--red-700); }
+.od-both { font-size: 19px; color: var(--ink-2); padding: 0 6px; }
+.title-slide .byline .affil { color: var(--ink-3); }
+.title-slide .venue { margin: 14px 0 0; font-size: 23px; font-weight: 600; color: var(--red); letter-spacing: .01em; }
+.variant-switch .vs-label { font: 500 16px/1 var(--font); color: var(--ink-3); padding: 0 6px 0 10px; }
+
+/* slide 4: design parameters (top) above the fitness landscape (bottom) */
+.opt-right { display: flex; flex-direction: column; gap: 14px; min-height: 0; min-width: 0; height: 100%; }
+.opt-right .param-anim { flex: 0 0 43%; position: relative; min-height: 0; padding-top: 22px; }
+.opt-right .opt-land { flex: 1; position: relative; min-height: 0; }
+
+/* ---- slide "ALESIA – Under the hood": the list of layers beside the stack (widgets/alesia-stack.js) */
+.slide ol.us-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; justify-content: center; gap: 11px; height: 100%; }
+.slide ol.us-list li { padding: 3px 0 3px 22px; margin: 0; border-left: 4px solid #cfcfd5; opacity: 0; transform: translateX(16px);
+  transition: opacity .45s ease, transform .45s ease, border-color .3s ease; }
+.slide ol.us-list li::marker { content: none; }
+.slide ol.us-list li.on { opacity: 1; transform: none; }
+.slide ol.us-list li.cur { border-left-color: var(--red); }
+.slide ol.us-list.us-instant li { transition: none !important; }
+.us-t { font-size: 24px; font-weight: 700; line-height: 1.22; color: var(--ink); }
+.us-list li.cur .us-t { color: var(--red); }
+.us-d { font-size: 18.5px; line-height: 1.36; color: #55555d; margin-top: 2px; }
