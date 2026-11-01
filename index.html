@@ -131,16 +131,16 @@
   <aside class="notes"></aside>
 </section>
 
-<!-- ======== 4 · OPTIMISATION OF SUPERCONDUCTING MAGNET WITH ALESIA  (versions: SC magnet / ECRIS) -->
+<!-- ======== 4 · OPTIMISATION OF SUPERCONDUCTING MAGNETS WITH ALESIA  (cases: accelerator magnet / MRI magnet / ECRIS) -->
 <section class="slide" data-title="Optimisation of superconducting magnets with ALESIA">
-  <h2 class="h2-long"><span data-for-variant="sc">Optimisation of superconducting magnets with ALESIA</span><span data-for-variant="ecris">Optimisation of ECR ion sources with ALESIA</span></h2>
-  <div class="variant-switch"><span class="vs-label">Case:</span><button data-variant="sc">Superconducting magnet</button><button data-variant="ecris">ECR ion source</button></div>
+  <h2 class="h2-long"><span data-for-variant="sc mri">Optimisation of superconducting magnets with ALESIA</span><span data-for-variant="ecris">Optimisation of ECR ion sources with ALESIA</span></h2>
+  <div class="variant-switch"><span class="vs-label">Case:</span><button data-variant="sc">Accelerator magnet</button><button data-variant="mri">MRI magnet</button><button data-variant="ecris">ECR ion source</button></div>
   <div class="content cols" style="--cols: 0.5fr 1.5fr; --gap: 24px">
     <div style="font-size: 27px; align-self: center">
       <h3>New design philosophy</h3>
       <ul>
         <li>Compute everything <span class="hl">together</span> in the same workflow
-          <ul data-for-variant="sc">
+          <ul data-for-variant="sc mri">
             <li class="b">Magnetic</li>
             <li class="b">Mechanical</li>
             <li class="b">Conductor</li>
@@ -168,10 +168,10 @@
   <aside class="notes"></aside>
 </section>
 
-<!-- ================ 5 · FITNESS SCORE  (versions: SC magnet / ECRIS) -->
+<!-- ================ 5 · OPTIMISATION OBJECTIVES  (cases: accelerator magnet / MRI magnet / ECRIS) -->
 <section class="slide" data-title="Optimisation objectives">
   <h2>Optimisation objectives</h2>
-  <div class="variant-switch"><span class="vs-label">Case:</span><button data-variant="sc">Superconducting magnet</button><button data-variant="ecris">ECR ion source</button></div>
+  <div class="variant-switch"><span class="vs-label">Case:</span><button data-variant="sc">Accelerator magnet</button><button data-variant="mri">MRI magnet</button><button data-variant="ecris">ECR ion source</button></div>
   <div class="content cols" style="--cols: 0.86fr 1.14fr; --gap: 30px">
     <div style="align-self:center">
       <div data-for-variant="sc">
@@ -183,6 +183,27 @@
               <li>Coil dimensions</li>
               <li>Yoke dimensions</li>
               <li>Current density</li>
+            </ul>
+          </li>
+          <li>Targets and constraints
+            <ul>
+              <li>Magnetic field quality</li>
+              <li>Stresses</li>
+              <li>Conductor margins</li>
+              <li>Hotspot temperature</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+      <div data-for-variant="mri">
+        <h3>MRI magnet optimisation</h3>
+        <ul>
+          <li>Dynamic inputs
+            <ul>
+              <li>Conductor dimensions (RIC and WIC)</li>
+              <li>Main coil dimensions and groups</li>
+              <li>Shielding coil dimensions</li>
+              <li>Current densities</li>
             </ul>
           </li>
           <li>Targets and constraints
@@ -235,6 +256,7 @@
     </div>
     <div class="opt-right">
       <div class="param-anim" data-for-variant="sc" data-widget="coil-params"></div>
+      <div class="param-anim" data-for-variant="mri" data-widget="mri-params"></div>
       <div class="param-anim" data-for-variant="ecris" data-widget="ibsimu-params"></div>
       <div class="opt-land" data-widget="alesia-landscape"></div>
     </div>
@@ -302,10 +324,95 @@
   </div>
 </section>
 
-<!-- ======== 8 · SPIN ROTATORS MAGNETS · ECR ION SOURCES  (versions: SC magnet / ECRIS) -->
+<!-- ======== 8 · APPLICATION TO SPIN ROTATORS · ECRIS ELECTRODE OPTIMISATION  (cases: accelerator magnet / ECRIS) -->
+<section class="slide" data-title="Application to SPIN ROTATORS · ECRIS electrode optimisation">
+  <h2><span data-for-variant="sc">Application to SPIN ROTATORS</span><span data-for-variant="ecris">ECRIS electrode optimisation</span></h2>
+  <div class="variant-switch"><span class="vs-label">Case:</span><button data-variant="sc">Accelerator magnet</button><button data-variant="ecris">ECR ion source</button></div>
+  <div data-for-variant="sc" class="content rows" style="--gap: 18px">
+    <div class="cols" style="--cols: 1fr 1.25fr; --gap: 40px">
+      <div>
+        <p class="mt-0">Compute everything <span class="hl">together</span> in the same workflow: <b>magnetic, mechanical, conductor, quench</b></p>
+        <p class="small muted mt-0">Optimisers compared: random scan, particle swarm optimisation, and combined Bayesian optimisation (BO) + covariance matrix adaptation evolution strategy (CMA-ES)</p>
+        <p class="tiny muted mt-0">Minenna et al. (2026), <a href="https://doi.org/10.2139/ssrn.6641717">doi:10.2139/ssrn.6641717</a></p>
+      </div>
+      <div class="card score-card">
+        <div class="eq">$f(y)=\sum_i w_i\,(y_i-t_i)^2$</div>
+        <ul class="small">
+          <li>Score (log scale)
+            <ul>
+              <li>in T<sup>6</sup>·m<sup>4</sup>·MPa<sup>2</sup>·K<sup>2</sup></li>
+              <li>2 field integrals, 2 fringe fields, max von Mises stress, max hotspot temperature</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="plot-row">
+      <figure data-step="1"><div class="plot"><img src="assets/img/score-random.png" alt="Random scan: fitness score vs simulation index"></div><figcaption><b>Random</b> (benchmark)</figcaption></figure>
+      <figure data-step="2"><div class="plot"><img src="assets/img/score-pso.png" alt="Particle swarm optimisation: fitness score vs simulation index"></div><figcaption><b>Particle swarm optimisation</b></figcaption></figure>
+      <figure data-step="3"><div class="plot"><img src="assets/img/score-combined-bo-cmaes.png" alt="Combined BO and CMA-ES: fitness score vs simulation index"></div><figcaption><b>Combined BO + CMA-ES</b></figcaption></figure>
+    </div>
+  </div>
+  <div data-for-variant="ecris" class="content rows" style="--gap: 14px">
+    <div class="fill" style="flex:1">
+      <video poster="assets/video/ecris-electrode-optimisation-poster.jpg" data-autoplay muted loop playsinline preload="metadata" controls>
+        <source src="assets/video/ecris-electrode-optimisation.mp4" type="video/mp4">
+        <source src="assets/video/ecris-electrode-optimisation.webm" type="video/webm">
+      </video>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================== 9 · CONCLUSION -->
+<section class="slide" data-title="Conclusion" data-last>
+  <h2>Conclusion</h2>
+  <div class="content cols center" style="--cols: 1.25fr 1fr; --gap: 40px">
+    <div class="card">
+      <h3>ALESIA</h3>
+      <ul>
+        <li>New optimisation platform</li>
+        <li>Accelerates the design process: automates the design loop at each phase</li>
+        <li>Optimisation algorithms: GA, DE, PSO, CMA-ES, BO, DNN</li>
+        <li>Holistic understanding of the design</li>
+        <li>Applied to superconducting magnets (LTS and HTS) for accelerators, MRI and fusion</li>
+        <li>Beyond: ECR ion sources and beam dynamics in accelerators</li>
+      </ul>
+    </div>
+    <div class="card white" data-step>
+      <h3>SPIN ROTATORS</h3>
+      <ul>
+        <li>Various configurations tested</li>
+        <li>Solutions obtained with a module approach
+          <ul><li>Cost-effective</li></ul>
+        </li>
+        <li>Optimisation achieved thanks to machine learning and evolutionary algorithms</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- =================================================== 10 · THANK YOU -->
+<section class="slide title-slide thanks" data-chrome="none" data-title="Thank you">
+  <img class="title-logo" src="assets/img/cea-irfu-logo.png" alt="CEA IRFU">
+  <div class="title-block">
+    <h1>Thank you</h1>
+    <p class="subtitle">Any questions?</p>
+    <p class="byline"><b>Damien Minenna</b> · damien.minenna@cea.fr</p>
+  </div>
+  <div class="magnet-stage" data-widget="alesia-hub"></div>
+  <aside class="notes"></aside>
+</section>
+
+<!-- ===================================================== 11 · BACK UP -->
+<section class="slide section-slide no-decor" data-chrome="none" data-title="Back up">
+  <img class="banner" src="assets/img/backup-banner.jpg" alt="">
+  <h2>Back up</h2>
+</section>
+
+<!-- ======== 12 · SPIN ROTATORS MAGNETS · ECR ION SOURCES  (cases: accelerator magnet / ECRIS) -->
 <section class="slide" data-title="SPIN ROTATORS magnets · ECR ion sources">
   <h2><span data-for-variant="sc">SPIN ROTATORS magnets</span><span data-for-variant="ecris">Electron cyclotron resonance ion sources</span></h2>
-  <div class="variant-switch"><span class="vs-label">Case:</span><button data-variant="sc">Superconducting magnet</button><button data-variant="ecris">ECR ion source</button></div>
+  <div class="variant-switch"><span class="vs-label">Case:</span><button data-variant="sc">Accelerator magnet</button><button data-variant="ecris">ECR ion source</button></div>
   <div data-for-variant="sc" class="content cols" style="--cols: 0.9fr 1.1fr; --gap: 40px">
     <div>
       <h3>Electron–Ion Collider (EIC)</h3>
@@ -358,91 +465,6 @@
     <div class="full ecris-stage" data-widget="ecris-design"></div>
   </div>
   <aside class="notes"></aside>
-</section>
-
-<!-- ======== 9 · APPLICATION TO SPIN ROTATORS · ECRIS ELECTRODE OPTIMISATION  (versions: SC magnet / ECRIS) -->
-<section class="slide" data-title="Application to SPIN ROTATORS · ECRIS electrode optimisation">
-  <h2><span data-for-variant="sc">Application to SPIN ROTATORS</span><span data-for-variant="ecris">ECRIS electrode optimisation</span></h2>
-  <div class="variant-switch"><span class="vs-label">Case:</span><button data-variant="sc">Superconducting magnet</button><button data-variant="ecris">ECR ion source</button></div>
-  <div data-for-variant="sc" class="content rows" style="--gap: 18px">
-    <div class="cols" style="--cols: 1fr 1.25fr; --gap: 40px">
-      <div>
-        <p class="mt-0">Compute everything <span class="hl">together</span> in the same workflow: <b>magnetic, mechanical, conductor, quench</b></p>
-        <p class="small muted mt-0">Optimisers compared: random scan, particle swarm optimisation, and combined Bayesian optimisation (BO) + covariance matrix adaptation evolution strategy (CMA-ES)</p>
-        <p class="tiny muted mt-0">Minenna et al. (2026), <a href="https://doi.org/10.2139/ssrn.6641717">doi:10.2139/ssrn.6641717</a></p>
-      </div>
-      <div class="card score-card">
-        <div class="eq">$f(y)=\sum_i w_i\,(y_i-t_i)^2$</div>
-        <ul class="small">
-          <li>Score (log scale)
-            <ul>
-              <li>in T<sup>6</sup>·m<sup>4</sup>·MPa<sup>2</sup>·K<sup>2</sup></li>
-              <li>2 field integrals, 2 fringe fields, max von Mises stress, max hotspot temperature</li>
-            </ul>
-          </li>
-        </ul>
-      </div>
-    </div>
-    <div class="plot-row">
-      <figure data-step="1"><div class="plot"><img src="assets/img/score-random.png" alt="Random scan: fitness score vs simulation index"></div><figcaption><b>Random</b> (benchmark)</figcaption></figure>
-      <figure data-step="2"><div class="plot"><img src="assets/img/score-pso.png" alt="Particle swarm optimisation: fitness score vs simulation index"></div><figcaption><b>Particle swarm optimisation</b></figcaption></figure>
-      <figure data-step="3"><div class="plot"><img src="assets/img/score-combined-bo-cmaes.png" alt="Combined BO and CMA-ES: fitness score vs simulation index"></div><figcaption><b>Combined BO + CMA-ES</b></figcaption></figure>
-    </div>
-  </div>
-  <div data-for-variant="ecris" class="content rows" style="--gap: 14px">
-    <div class="fill" style="flex:1">
-      <video poster="assets/video/ecris-electrode-optimisation-poster.jpg" data-autoplay muted loop playsinline preload="metadata" controls>
-        <source src="assets/video/ecris-electrode-optimisation.mp4" type="video/mp4">
-        <source src="assets/video/ecris-electrode-optimisation.webm" type="video/webm">
-      </video>
-    </div>
-  </div>
-</section>
-
-<!-- ================================================== 10 · CONCLUSION -->
-<section class="slide" data-title="Conclusion" data-last>
-  <h2>Conclusion</h2>
-  <div class="content cols center" style="--cols: 1.25fr 1fr; --gap: 40px">
-    <div class="card">
-      <h3>ALESIA</h3>
-      <ul>
-        <li>New optimisation platform</li>
-        <li>Accelerates the design process: automates the design loop at each phase</li>
-        <li>Optimisation algorithms: GA, DE, PSO, CMA-ES, BO, DNN</li>
-        <li>Holistic understanding of the design</li>
-        <li>Applied to superconducting magnets (LTS and HTS) for accelerators, MRI and fusion</li>
-        <li>Beyond: ECR ion sources and beam dynamics in accelerators</li>
-      </ul>
-    </div>
-    <div class="card white" data-step>
-      <h3>SPIN ROTATORS</h3>
-      <ul>
-        <li>Various configurations tested</li>
-        <li>Solutions obtained with a module approach
-          <ul><li>Cost-effective</li></ul>
-        </li>
-        <li>Optimisation achieved thanks to machine learning and evolutionary algorithms</li>
-      </ul>
-    </div>
-  </div>
-</section>
-
-<!-- =================================================== 11 · THANK YOU -->
-<section class="slide title-slide thanks" data-chrome="none" data-title="Thank you">
-  <img class="title-logo" src="assets/img/cea-irfu-logo.png" alt="CEA IRFU">
-  <div class="title-block">
-    <h1>Thank you</h1>
-    <p class="subtitle">Any questions?</p>
-    <p class="byline"><b>Damien Minenna</b> · damien.minenna@cea.fr</p>
-  </div>
-  <div class="magnet-stage" data-widget="alesia-hub"></div>
-  <aside class="notes"></aside>
-</section>
-
-<!-- ===================================================== 12 · BACK UP -->
-<section class="slide section-slide no-decor" data-chrome="none" data-title="Back up">
-  <img class="banner" src="assets/img/backup-banner.jpg" alt="">
-  <h2>Back up</h2>
 </section>
 
 <!-- =================================== 13 · SPIN ROTATOR REQUIREMENTS -->

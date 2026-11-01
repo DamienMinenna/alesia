@@ -42,7 +42,8 @@
  *   <button data-variant="a">A</button> <button data-variant="b">B</button>
  *   <span data-for-variant="a">shown for A only</span>   (several names: data-for-variant="a b")
  *   widgets receive variant(name); the first button is the default (or data-variant-default on the slide);
- *   the choice applies to every slide with the same version names; build steps are counted per version
+ *   the choice applies to every slide with the same version names (the others show their default);
+ *   build steps are counted per version; the deck opens on the default version
  *   key V: next version (from any slide)
  *
  * Events: document.addEventListener('deck:enter' | 'deck:leave' | 'deck:step' | 'deck:variant', e => e.detail)
@@ -243,8 +244,8 @@
 
   /* -------------------------------------------------------------- variants
    * One choice for the whole deck: picking "ECRIS" on one slide switches every slide that has an
-   * "ecris" version. Each version has its own build steps, widgets and videos; the choice is kept
-   * when the page is reloaded in the same tab. */
+   * "ecris" version (slides without it show their default). Each version has its own build steps,
+   * widgets and videos; the deck always opens on the default version (first button). */
   function variantOff(node) { return !!(node.closest && node.closest('.deck-variant-off')); }
   function variantNames(slide) { return $$('[data-variant]', slide).map(function (b) { return b.getAttribute('data-variant'); }); }
   function setVariant(slide, name, synced) {
@@ -270,9 +271,13 @@
       afterChange();
     }
     emit('variant', { slide: slide, index: S.slides.indexOf(slide), variant: name }, slide);
-    if (!synced) {
-      try { sessionStorage.setItem('deck-variant', name); } catch (e) { /* ignore */ }
-      S.slides.forEach(function (o) { if (o !== slide && o._variant !== name) setVariant(o, name, true); });
+    if (!synced) {   // every other slide with versions follows; one without this version shows its default
+      S.slides.forEach(function (o) {
+        var nm = variantNames(o);
+        if (o === slide || !nm.length) return;
+        var target = nm.indexOf(name) >= 0 ? name : (o.getAttribute('data-variant-default') || nm[0]);
+        if (o._variant !== target) setVariant(o, target, true);
+      });
     }
   }
   function initVariants(slide) {
@@ -281,10 +286,8 @@
     btns.forEach(function (b) {
       b.addEventListener('click', function (e) { e.stopPropagation(); setVariant(slide, b.getAttribute('data-variant')); b.blur(); });
     });
-    var keep = null;
-    try { keep = sessionStorage.getItem('deck-variant'); } catch (e) { /* ignore */ }
-    var names = variantNames(slide);
-    setVariant(slide, names.indexOf(keep) >= 0 ? keep : (slide.getAttribute('data-variant-default') || names[0]), true);
+    var names = variantNames(slide);   // the deck always opens on the default version (first button)
+    setVariant(slide, slide.getAttribute('data-variant-default') || names[0], true);
   }
   /* V key: next version (on this slide, or on the deck's first slide with versions), shown in a toast */
   function cycleVariant() {
@@ -908,7 +911,7 @@
         ['F', 'Fullscreen'],
         ['S', 'Speaker view (notes, timer)'],
         ['B &nbsp; W', 'Black / white screen'],
-        ['V', 'Switch version (Case: superconducting magnet ↔ ECR ion source)'],
+        ['V', 'Switch case (accelerator magnet → MRI magnet → ECR ion source)'],
         ['Q', 'Animation quality: auto · high · medium · low (now ' + Q.mode + (Q.mode === 'auto' ? ', ' + Q.name : '') + ')'],
         ['Esc', 'Leave the current tool']
       ];

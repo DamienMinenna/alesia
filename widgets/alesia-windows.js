@@ -698,6 +698,143 @@
     ctx.save(); ctx.translate(g.ox, 0); SceneIBSimu.prototype.drawBg.call(this, ctx, g.DW, Hh); ctx.restore();
   };
 
+  /* MRI magnet (slide 5): a quarter of the r–z cross-section, as in the ISEULT geometry figure. The main coil is
+     cut into 5 groups; two of the gaps close and open again, so 3 to 5 groups are seen (merged groups are drawn as
+     one block). The shielding coil sits further out; both coils are coloured by their own current density Je. */
+  function SceneMRIQuarter() {}
+  SceneMRIQuarter.prototype.fps = 15;
+  SceneMRIQuarter.prototype.dims = function (t) {
+    var S = Math.sin;
+    function open(ph) { return 16 + 26 * (0.5 + 0.5 * S(0.47 * t + ph)); }                        // always open
+    function merge(w, ph) { return 52 * clamp01((S(w * t + ph) + 0.35) / 0.8); }                  // closed for a while
+    var hs = [105 + 25 * S(0.6 * t), 120 + 30 * S(0.5 * t + 1), 110 + 25 * S(0.7 * t + 2), 125 + 30 * S(0.45 * t + 3), 1180 + 160 * S(0.33 * t + 0.5)];
+    var gaps = [open(0.3), merge(0.42, 0.4), open(2.1), merge(0.31, 2.6)];
+    var z = 10, raw = [];
+    for (var g = 0; g < 5; g++) { raw.push([z, z + hs[g]]); z += hs[g] + (g < 4 ? gaps[g] : 0); }
+    var groups = [raw[0].slice()];
+    for (g = 1; g < 5; g++) { if (gaps[g - 1] < 0.5) groups[groups.length - 1][1] = raw[g][1]; else groups.push(raw[g].slice()); }
+    return {
+      ri: 500 + 45 * S(0.37 * t), th: 430 + 45 * S(0.53 * t + 1), groups: groups,
+      sr: 1960 + 60 * S(0.41 * t + 0.7), st: 170 + 30 * S(0.6 * t + 2), sz: 580 + 70 * S(0.35 * t + 1), sh: 500 + 70 * S(0.47 * t + 3),
+      jm: 110 + 45 * S(0.55 * t + 0.3), js: 70 + 40 * S(0.48 * t + 2.4)
+    };
+  };
+  SceneMRIQuarter.prototype.draw = function (ctx, W, Hh, t) {
+    var d = this.dims(t), barW = 112, VW = W - barW, RMAX = 2400, ZMAX = 2200;
+    var mL = 54, mB = 40, mT = 24, k = Math.min((VW - mL - 14) / RMAX, (Hh - mT - mB) / ZMAX);
+    var ox = mL + Math.max(0, (VW - mL - 14 - RMAX * k) / 2), oy = mT + ZMAX * k;
+    function X(r) { return ox + r * k; }
+    function Y(z) { return oy - z * k; }
+    function rgb(c) { return 'rgb(' + (c[0] | 0) + ',' + (c[1] | 0) + ',' + (c[2] | 0) + ')'; }
+    var col = [0, 0, 0], i;
+    // axes and light grid
+    ctx.lineWidth = 1; ctx.strokeStyle = '#efeff2';
+    for (i = 500; i <= RMAX; i += 500) { ctx.beginPath(); ctx.moveTo(X(i) + 0.5, Y(0)); ctx.lineTo(X(i) + 0.5, Y(ZMAX)); ctx.stroke(); }
+    for (i = 500; i <= ZMAX; i += 500) { ctx.beginPath(); ctx.moveTo(X(0), Y(i) + 0.5); ctx.lineTo(X(RMAX), Y(i) + 0.5); ctx.stroke(); }
+    ctx.strokeStyle = '#8a8a93'; ctx.beginPath(); ctx.moveTo(X(0) + 0.5, Y(ZMAX)); ctx.lineTo(X(0) + 0.5, Y(0) + 0.5); ctx.lineTo(X(RMAX), Y(0) + 0.5); ctx.stroke();
+    ctx.font = '12px Poppins, sans-serif'; ctx.fillStyle = '#8a8a93';
+    ctx.textAlign = 'center'; [0, 1000, 2000].forEach(function (v) { ctx.fillRect(X(v), Y(0), 1, 5); ctx.fillText(String(v), X(v), Y(0) + 18); });
+    ctx.textAlign = 'right'; [0, 1000, 2000].forEach(function (v) { ctx.fillRect(X(0) - 5, Y(v), 5, 1); ctx.fillText(String(v), X(0) - 8, Y(v) + 4); });
+    ctx.font = '600 13px Poppins, sans-serif'; ctx.fillStyle = '#46464e';
+    ctx.textAlign = 'right'; ctx.fillText('r (mm)', X(RMAX), Y(0) + 34);
+    ctx.textAlign = 'left'; ctx.fillText('z (mm)', X(0) + 6, Y(ZMAX) + 4);
+    // field region (DSV) at the centre of the magnet
+    ctx.strokeStyle = '#e2001a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(X(0), Y(0), 110 * k, -Math.PI / 2, 0); ctx.stroke();
+    ctx.font = '600 12px Poppins, sans-serif'; ctx.fillStyle = '#e2001a'; ctx.textAlign = 'left'; ctx.fillText('DSV', X(0) + 110 * k + 4, Y(0) - 5);
+    // main coil groups
+    CM_J(clamp01(d.jm / 200), col); var cm = rgb(col);
+    ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(30,30,40,.55)';
+    d.groups.forEach(function (gp) {
+      ctx.fillStyle = cm; ctx.fillRect(X(d.ri), Y(gp[1]), d.th * k, (gp[1] - gp[0]) * k);
+      ctx.strokeRect(X(d.ri) + 0.5, Y(gp[1]) + 0.5, d.th * k - 1, (gp[1] - gp[0]) * k - 1);
+    });
+    // shielding coil
+    CM_J(clamp01(d.js / 200), col);
+    ctx.fillStyle = rgb(col); ctx.fillRect(X(d.sr), Y(d.sz + d.sh), d.st * k, d.sh * k);
+    ctx.strokeRect(X(d.sr) + 0.5, Y(d.sz + d.sh) + 0.5, d.st * k - 1, d.sh * k - 1);
+    // labels
+    var top = d.groups[d.groups.length - 1];
+    ctx.fillStyle = '#1f1f24'; ctx.font = '600 15px Poppins, sans-serif'; ctx.textAlign = 'left';
+    var lx = X(d.ri + d.th) + 10, ly = Y((top[0] + top[1]) / 2);
+    ctx.fillText('main coil', lx, ly - 4);
+    ctx.font = '13px Poppins, sans-serif'; ctx.fillStyle = '#55555d'; ctx.fillText(d.groups.length + ' groups', lx, ly + 13);
+    ctx.font = '600 15px Poppins, sans-serif'; ctx.fillStyle = '#1f1f24'; ctx.textAlign = 'center';
+    ctx.fillText('shielding', X(d.sr + d.st / 2), Y(d.sz + d.sh) - 26); ctx.fillText('coil', X(d.sr + d.st / 2), Y(d.sz + d.sh) - 9);
+    colourBar(ctx, VW + 34, 34, 16, Hh - 70, CM_J, 'Je (A/mm²)', [0, 50, 100, 150, 200], 0, 200,
+      [{ v: d.jm, label: 'MC ' + Math.round(d.jm) }, { v: d.js, label: 'SC ' + Math.round(d.js) }]);
+  };
+
+  /* the two conductors of the MRI magnet, cross-sections with changing dimensions: WIC (wire in channel, shielding
+     coil) and RIC (Rutherford cable in channel, main coil), as in the ISEULT geometry figure */
+  var CU = '#dd9068', CU_EDGE = '#8a4b2c', INS = '#f2cd55', INS_EDGE = '#b8922a';
+  function SceneRicWic() {}
+  SceneRicWic.prototype.fps = 15;
+  SceneRicWic.prototype.draw = function (ctx, W, Hh, t) {
+    var S = Math.sin;
+    var wic = { w: 6.8 + 0.8 * S(0.5 * t), t: 3.7 + 0.5 * S(0.62 * t + 1), d: 1.3 + 0.2 * S(0.7 * t + 2), ins: 0.24 + 0.06 * S(0.4 * t) };
+    var ric = { w: 10.5 + 1.2 * S(0.45 * t + 0.8), t: 5.2 + 0.7 * S(0.55 * t + 2), d: 0.95 + 0.12 * S(0.8 * t + 1), ins: 0.24 + 0.06 * S(0.4 * t + 1), ins2: 1.1 + 0.3 * S(0.5 * t + 1) };
+    var titleH = 24, arrowH = 30, gapH = 16, maxW = 11.7 + 1.4 + 0.6 + 0.6;
+    var k = Math.min((W - 62) / maxW, (Hh - 2 * (titleH + arrowH) - gapH - 8) / (5.9 + 0.6 + 4.2 + 0.6));
+    var areaW = W - 40;
+    function rrect(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+    function strand(cx, cy, dd) {
+      ctx.fillStyle = '#e7a57d'; ctx.strokeStyle = CU_EDGE; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(cx, cy, dd / 2, 0, TAU); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#3a3a3f'; ctx.beginPath(); ctx.arc(cx, cy, dd * 0.36, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#e7a57d'; ctx.beginPath(); ctx.arc(cx, cy, dd * 0.12, 0, TAU); ctx.fill();
+    }
+    function arrow(x0, y0, x1, y1) {
+      var a = Math.atan2(y1 - y0, x1 - x0), s = 7;
+      ctx.strokeStyle = '#26262b'; ctx.fillStyle = '#26262b'; ctx.lineWidth = 1.3;
+      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+      [[x1, y1, a], [x0, y0, a + Math.PI]].forEach(function (e) {
+        ctx.beginPath(); ctx.moveTo(e[0], e[1]); ctx.lineTo(e[0] - s * Math.cos(e[2] - 0.45), e[1] - s * Math.sin(e[2] - 0.45));
+        ctx.lineTo(e[0] - s * Math.cos(e[2] + 0.45), e[1] - s * Math.sin(e[2] + 0.45)); ctx.closePath(); ctx.fill();
+      });
+    }
+    function dims(x, y, w, h) {   // w under the conductor, t on its right
+      arrow(x, y + h + 13, x + w, y + h + 13);
+      ctx.font = 'italic 600 15px Poppins, sans-serif'; ctx.fillStyle = '#26262b'; ctx.textAlign = 'center'; ctx.fillText('w', x + w / 2, y + h + 30);
+      arrow(x + w + 16, y, x + w + 16, y + h);
+      ctx.textAlign = 'left'; ctx.fillText('t', x + w + 23, y + h / 2 + 5);
+    }
+    function title(text, sub, y) {
+      ctx.font = '600 15px Poppins, sans-serif'; ctx.fillStyle = '#26262b'; ctx.textAlign = 'left'; ctx.fillText(text, 6, y);
+      var tw = ctx.measureText(text).width;
+      ctx.font = '13px Poppins, sans-serif'; ctx.fillStyle = '#6b6b73'; ctx.fillText(sub, 12 + tw, y);
+    }
+    function jlabel(x, y, sub) {
+      ctx.fillStyle = '#9b1020'; ctx.textAlign = 'center';
+      ctx.font = 'italic 600 15px Poppins, sans-serif'; ctx.fillText('J', x - 6, y);
+      ctx.font = 'italic 11px Poppins, sans-serif'; ctx.fillText('e,' + sub, x + 12, y + 3);
+    }
+    // ---- WIC (shielding coil)
+    var y0 = titleH;
+    title('WIC', 'shielding coil', 16);
+    var cw = wic.w * k, ch = wic.t * k, ins = wic.ins * k, x = (areaW - cw) / 2, y = y0 + 6 + ins;
+    ctx.fillStyle = INS; ctx.strokeStyle = INS_EDGE; ctx.lineWidth = 1;
+    ctx.fillRect(x - ins, y - ins, cw + 2 * ins, ch + 2 * ins); ctx.strokeRect(x - ins + 0.5, y - ins + 0.5, cw + 2 * ins - 1, ch + 2 * ins - 1);
+    ctx.fillStyle = CU; ctx.strokeStyle = CU_EDGE; rrect(x, y, cw, ch, 0.45 * k); ctx.fill(); ctx.stroke();
+    var dd = wic.d * k;
+    ctx.fillStyle = '#b9bcc3'; rrect(x + cw / 2 - dd * 0.62, y - 1, dd * 1.24, dd * 1.12, dd * 0.5); ctx.fill();   // groove (solder)
+    strand(x + cw / 2, y + dd * 0.55, dd);
+    jlabel(x + cw / 2, y + ch * 0.78, 'SC');
+    dims(x, y, cw, ch);
+    // ---- RIC (main coil)
+    var y1 = y + ch + ins + arrowH + gapH + titleH;
+    title('RIC', 'main coil', y1 - 8);
+    cw = ric.w * k; ch = ric.t * k; ins = ric.ins * k; var ins2 = ric.ins2 * k;
+    x = (areaW - cw + ins2) / 2; y = y1 + 4 + ins;
+    ctx.fillStyle = INS; ctx.strokeStyle = INS_EDGE;
+    ctx.fillRect(x - ins2, y - ins, cw + ins2 + ins, ch + 2 * ins); ctx.strokeRect(x - ins2 + 0.5, y - ins + 0.5, cw + ins2 + ins - 1, ch + 2 * ins - 1);
+    ctx.fillStyle = CU; ctx.strokeStyle = CU_EDGE; rrect(x, y, cw, ch, 0.45 * k); ctx.fill(); ctx.stroke();
+    dd = ric.d * k; var pitch = dd * 1.08, cbw = 5 * pitch + dd * 0.3, cbh = 2 * pitch + dd * 0.3, cbx = x + (cw - cbw) / 2, cby = y;
+    ctx.fillStyle = '#3d3d42'; ctx.fillRect(cbx, cby, cbw, cbh);
+    for (var r = 0; r < 2; r++) for (var c = 0; c < 5; c++) strand(cbx + dd * 0.15 + pitch * (c + 0.5), cby + dd * 0.15 + pitch * (r + 0.5), dd);
+    jlabel(x + cw / 2, y + ch * 0.8, 'MC');
+    dims(x, y, cw, ch);
+  };
+
   // a strip of canvases drawn directly on the slide (no window), each with its scene
   function panelWidget(parts, labels) {
     return {
@@ -756,6 +893,7 @@
   }
   Deck.widget('coil-params', panelWidget([{ Scene: SceneCoilYoke, flex: 1.15 }, { Scene: K.scenes.SceneConductor, flex: 1 }], ['Coil and yoke', 'Conductor']));
   Deck.widget('ibsimu-params', panelWidget([{ Scene: SceneIBSimuV, flex: 1 }], ['Beam extraction electrodes']));
+  Deck.widget('mri-params', panelWidget([{ Scene: SceneMRIQuarter, flex: 1.25 }, { Scene: SceneRicWic, flex: 1 }], ['Main and shielding coils (1/4 cross-section)', 'Conductors']));
 
   /* ============================== live workflow (slide "A new optimisation platform") */
   var MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace';
@@ -1102,6 +1240,15 @@
       }
     }
   };
+  // MRI magnets: the accelerator-magnet workflow with a solenoid instead of the racetrack in the
+  // magnetism, mechanics and quench windows
+  var W6M = [
+    Object.assign({}, W6[0], { Scene: K.scenes.SceneMagneticSol }),
+    Object.assign({}, W6[1], { Scene: K.scenes.SceneMechanicsSol }),
+    W6[2],
+    Object.assign({}, W6[3], { Scene: K.scenes.SceneQuenchSol })
+  ];
+  WF_VARIANTS.mri = Object.assign({}, WF_VARIANTS.sc, { windows: [WIN_OPT, W6M[0], W6M[1], W6M[2], W6M[3], WIN_IN, WIN_DB, WIN_SCORE, WIN_REQ, WIN_MGR] });
 
   var WF_CSS = [
     '.wf-host{position:absolute;inset:0}',
@@ -1227,7 +1374,7 @@
 
   // stage 0: inputs, requirements and the codes, not linked yet
   // stage 1 (one key press): optimiser, database, score, ALESIA manager and every link of the automated loop
-  // the slide's buttons (data-variant="sc" | "ecris") switch between the two versions
+  // the slide's buttons (data-variant="sc" | "mri" | "ecris") switch between the versions
   Deck.widget('alesia-workflow-live', {
     steps: 1,
     mount: function (el, api) {

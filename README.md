@@ -44,7 +44,7 @@ vendor/                 ← Poppins fonts, KaTeX
 | `F` (or `F5`) | fullscreen |
 | `S` | speaker view in a second window: current/next slide, notes, timer (allow pop-ups) |
 | `B` / `W` | black / white screen |
-| `V` | switch the case (Superconducting magnet ↔ ECR ion source) on every slide that has one, from any slide |
+| `V` | switch the case (Accelerator magnet → MRI magnet → ECR ion source) on every slide that has one, from any slide |
 | `Q` | animation quality: auto → high → medium → low (see *Performance*) |
 | `?` | help · `Esc` leaves the current tool |
 
@@ -85,8 +85,8 @@ Useful building blocks (see `theme/theme.css`):
 * `.hl` red bold, `.muted`, `.small`, `.tiny`, `.pill`.
 * Steps: `data-step` (next press), `data-step="3"` (explicit), `data-step-out="4"` (hide again), `data-anim="fade|up|down|left|right|zoom|grow|blur|highlight"`.
 * Slide options: `data-chrome="none"` (no footer), class `no-decor` (no cubes), `data-dim-past` (dims earlier steps).
-* End of the talk: `data-last` on one slide (here the conclusion, slide 10). Page numbers read `n/10` up to it and the progress bar fills up to it and stays full; the back-up slides after it show the plain number.
-* Versions of one slide (slides 4, 5, 8 and 9, *Case: Superconducting magnet / ECR ion source*): buttons `<button data-variant="sc">…</button>` inside `<div class="variant-switch">` (shown at the top left, above the title; hidden in the PDF), and `data-for-variant="sc"` on anything that belongs to one version only — a title, a list, or a whole `<div class="content">` block. The choice is shared by the whole deck: picking ECRIS on one slide switches every slide that has an ECRIS version, and it survives a reload of the tab. Each version has its own build steps, widgets and videos (the hidden version's animations sleep). The first button is the default; widgets with versions of their own get a `variant(name)` call; `Deck.variant('ecris')` switches from a script.
+* End of the talk: `data-last` on one slide (here the conclusion, slide 9). Page numbers read `n/9` up to it and the progress bar fills up to it and stays full; the back-up slides after it show the plain number.
+* Versions of one slide (*Case: Accelerator magnet / MRI magnet / ECR ion source* on slides 4 and 5; *Accelerator magnet / ECR ion source* on slides 8 and 12): buttons `<button data-variant="sc">…</button>` inside `<div class="variant-switch">` (shown at the top left, above the title; hidden in the PDF), and `data-for-variant="sc"` on anything that belongs to one version only — a title, a list, or a whole `<div class="content">` block (`data-for-variant="sc mri"` for several). The internal names are `sc` (accelerator magnet), `mri` and `ecris`. The choice is shared by the whole deck: picking ECRIS on one slide switches every slide that has an ECRIS version, and a slide without the chosen version shows its default. The deck always opens on the default version. Each version has its own build steps, widgets and videos (the hidden version's animations sleep). The first button is the default; widgets with versions of their own get a `variant(name)` call; `Deck.variant('ecris')` switches from a script.
 * Footer text, date and logo are set once on `<div class="deck" data-footer="…" data-date="…">` (here: Séminaire AISSAI, 4/11/2026).
 
 ## Adding JavaScript (widgets)
@@ -114,10 +114,10 @@ Six windows appear one after the other on their own (one every 4.6 s): magnetic 
 
 They reuse the window engine of `magnet-design.js` (exposed as `window.MDKit`), so they share the same look:
 
-* `alesia-workflow-live` — slide 4: the ALESIA workflow, in two versions chosen with the Case buttons (Superconducting magnet / ECR ion source). **SC magnet**: inputs (pandas · json), targets & constraints and the four physics codes in a row at the bottom; one key press adds the Bayesian optimiser, the ALESIA database (material properties, conductor fits), the ALESIA manager (Slurm terminals, "Parallel running"), the score function and the red animated links of the automated loop. **ECRIS**: the same loop with a single, larger IBSimu window ("Beam extraction") and no database. Both versions are described in `WF_VARIANTS` (`alesia-windows.js`): windows, positions, the step of each window, delays, captions and arrows.
-* `coil-params` / `ibsimu-params` — slide 5, top right, drawn on the slide (no window), one per case: 1/8 of a solenoid (coil) in its iron yoke with changing dimensions and a current-density colour bar, next to the conductor animation of the title sequence; or the IBSimu beam extraction with electrodes coloured by their changing potential (colour bar).
+* `alesia-workflow-live` — slide 4: the ALESIA workflow, in three versions chosen with the Case buttons. **Accelerator magnet**: inputs (pandas · json), targets & constraints and the four physics codes in a row at the bottom; one key press adds the Bayesian optimiser, the ALESIA database (material properties, conductor fits), the ALESIA manager (Slurm terminals, "Parallel running"), the score function and the red animated links of the automated loop. **MRI magnet**: the same, with a solenoid instead of the racetrack in the magnetism, mechanics and quench windows (`SceneMagneticSol`, `SceneMechanicsSol`, `SceneQuenchSol` in `magnet-design.js`; the coil shapes are in `SHAPES`). **ECRIS**: the same loop with a single, larger IBSimu window ("Beam extraction") and no database. The versions are described in `WF_VARIANTS` (`alesia-windows.js`): windows, positions, the step of each window, delays, captions and arrows.
+* `coil-params` / `mri-params` / `ibsimu-params` — slide 5, top right, drawn on the slide (no window), one per case: 1/8 of a solenoid (coil) in its iron yoke with changing dimensions and a current-density colour bar, next to the conductor animation of the title sequence; for the MRI magnet, a quarter of the r–z cross-section (main coil in 3 to 5 groups that merge and split, shielding coil, one current density each on the colour bar) next to the two conductors, WIC (shielding coil) and RIC (main coil), with changing dimensions; or the IBSimu beam extraction with electrodes coloured by their changing potential (colour bar).
 * `alesia-landscape` — slide 5, appears with "For each run" (one key press): one ALESIA window, a 2D fitness landscape in the reds of the optimiser example (darkest = global minimum, lighter = local minima) with a green discontinuity band; a particle swarm slowly converges to the global minimum ("finding minima ongoing").
-* `ecris-design` — slide 8, ECRIS version: magnetic and mechanics windows, then an IBSimu window: ECRIS extraction electrodes, candidate electrode shapes coloured by fitness score, pink beam propagating left to right ("beam dynamics ongoing"). Two key presses.
+* `ecris-design` — slide 12 (back-up), ECRIS version: magnetic and mechanics windows, then an IBSimu window: ECRIS extraction electrodes, candidate electrode shapes coloured by fitness score, pink beam propagating left to right ("beam dynamics ongoing"). Two key presses.
 * `alesia-hub` — thank-you slide: the six tools of the title sequence, now connected through a central ALESIA window running a Bayesian optimisation (Gaussian-process surrogate, uncertainty band, expected-improvement acquisition).
 
 To build your own, call `MDKit.makeWidget({ windows, steps, layout, links })` — see the three configurations at the end of `alesia-windows.js`. Link types: `blocked` (title slide), `flow` (connected) and `hub`.
@@ -136,7 +136,7 @@ An isometric glass box in which the layers of ALESIA are stacked, bottom to top.
 
 ## Videos
 
-`<video data-autoplay muted loop playsinline controls>` starts from the beginning each time its slide is shown and pauses when you leave. Give an MP4 (H.264) first and a WebM second, as on slide 9 (ECRIS version), so every browser finds a format it can play.
+`<video data-autoplay muted loop playsinline controls>` starts from the beginning each time its slide is shown and pauses when you leave. Give an MP4 (H.264) first and a WebM second, as on slide 8 (ECRIS version), so every browser finds a format it can play.
 
 ## Performance
 

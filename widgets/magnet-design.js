@@ -95,11 +95,14 @@
   }
 
   /* ========================================================= racetrack coil */
-  function Coil() {
-    var Ls = this.Ls = 2.0, Rc = this.Rc = 0.62, wr = this.wr = 0.36, hz = this.hz = 0.30;
+  // o (optional): { Ls, Rc, wr, hz, nS, nA, no, nt }; Ls = 0 (no straight parts) gives a solenoid
+  function Coil(o) {
+    o = o || {};
+    var Ls = this.Ls = o.Ls != null ? o.Ls : 2.0, Rc = this.Rc = o.Rc || 0.62, wr = this.wr = o.wr || 0.36, hz = this.hz = o.hz || 0.30;
     var a = this.a = wr / 2, b = this.b = hz / 2, arcL = Math.PI * Rc;
+    this.sol = Ls === 0;
     this.P = 2 * Ls + 2 * arcL;
-    var nS = this.nS = 16, nA = this.nA = 22, s = [], i;
+    var nS = this.nS = o.nS != null ? o.nS : 16, nA = this.nA = o.nA || 22, s = [], i;
     for (i = 0; i < nS; i++) s.push(Ls * i / nS);
     for (i = 0; i < nA; i++) s.push(Ls + arcL * i / nA);
     for (i = 0; i < nS; i++) s.push(Ls + arcL + Ls * i / nS);
@@ -115,7 +118,7 @@
     }
     this.transitions = [0, nS, nS + nA, 2 * nS + nA];
     // cross-section perimeter (r along N, h along Z)
-    var no = 2, nt = 3, cs = [];
+    var no = o.no || 2, nt = o.nt || 3, cs = [];
     for (i = 0; i < no; i++) cs.push([a, -b + 2 * b * i / no, 0]);
     for (i = 0; i < nt; i++) cs.push([a - 2 * a * i / nt, b, 1]);
     for (i = 0; i < no; i++) cs.push([-a, b - 2 * b * i / no, 2]);
@@ -177,7 +180,9 @@
   Coil.prototype.computeFields = function () {
     var NV = this.NV, NP = this.NP, a = this.a, b = this.b, i, v;
     // |B| on the surface
-    var F = this.filaments([[a / 2, b / 2], [a / 2, -b / 2], [-a / 2, b / 2], [-a / 2, -b / 2]]);
+    var offs = [[a / 2, b / 2], [a / 2, -b / 2], [-a / 2, b / 2], [-a / 2, -b / 2]];
+    if (this.sol) { offs = []; [-0.75, -0.25, 0.25, 0.75].forEach(function (h) { offs.push([a / 2, h * b], [-a / 2, h * b]); }); }
+    var F = this.filaments(offs);
     var B = [0, 0, 0], mag = new Float32Array(NV), lo = 1e9, hi = -1e9;
     for (v = 0; v < NV; v++) {
       biot(F, this.bx[v], this.by[v], this.bz[v], 0.003, B);
@@ -201,18 +206,28 @@
       } else { bend = 0.34; g = 0.2; }
       for (var j = 0; j < NP; j++) {
         v = i * NP + j;
-        var fr = 0.32 + 0.68 * Math.abs(this.csR[j]) / a;
-        var s = 0.08 + 0.72 * bend * fr + 0.28 * this.Bn[v];
+        var s;
+        if (this.sol) {   // solenoid: hoop stress highest on the inner radius, ends pulled towards the mid-plane
+          s = 0.12 + 0.48 * this.Bn[v] + 0.4 * (a - this.csR[j]) / (2 * a);
+          this.dispDir[3 * v] = this.nx[i] * 0.6;
+          this.dispDir[3 * v + 1] = this.ny[i] * 0.6;
+          this.dispDir[3 * v + 2] = -0.3 * (this.csH[j] / b);
+        } else {
+          var fr = 0.32 + 0.68 * Math.abs(this.csR[j]) / a;
+          s = 0.08 + 0.72 * bend * fr + 0.28 * this.Bn[v];
+          this.dispDir[3 * v] = this.nx[i] * g;
+          this.dispDir[3 * v + 1] = this.ny[i] * g;
+          this.dispDir[3 * v + 2] = 0.12 * g * (this.csH[j] / b);
+        }
         this.sig[v] = s; if (s > smax) smax = s;
-        this.dispDir[3 * v] = this.nx[i] * g;
-        this.dispDir[3 * v + 1] = this.ny[i] * g;
-        this.dispDir[3 * v + 2] = 0.12 * g * (this.csH[j] / b);
       }
     }
     for (v = 0; v < NV; v++) this.sig[v] /= smax;
 
     // quench: arrival-time ingredients from a hot spot on the top straight
+    // (solenoid: on the outer surface, on the side facing the camera of the quench window)
     var s0 = this.Ls / 2, P = this.P, r0 = a * 0.2, h0 = b;
+    if (this.sol) { s0 = arcLen(this) + 0.72 * this.Rc; r0 = a; h0 = 0.3 * b; }
     this.qDs = new Float32Array(NV); this.qDt = new Float32Array(NV);
     for (i = 0; i < this.NR; i++) for (j = 0; j < NP; j++) {
       v = i * NP + j;
@@ -220,12 +235,15 @@
       this.qDs[v] = ds;
       this.qDt[v] = Math.abs(this.csR[j] - r0) / (2 * a) + Math.abs(this.csH[j] - h0) / (2 * b);
     }
-    this.hot = [-this.Ls / 2 + s0, this.Rc + r0, h0]; // world position of the hot spot
+    var fh = this.frame(s0);
+    this.hot = [fh.x + r0 * fh.nx, fh.y + r0 * fh.ny, h0]; // world position of the hot spot
   };
 
   /* field lines: RK4 streamlines of a single softened filament loop */
+  function arcLen(c) { return Math.PI * c.Rc; }
   function traceFieldLines(coil) {
-    var F = coil.filaments([[0, 0]]), eps2 = 0.012, B = [0, 0, 0];
+    var F = coil.filaments(coil.sol ? [[0, -0.6 * coil.b], [0, 0], [0, 0.6 * coil.b]] : [[0, 0]]), eps2 = 0.012, B = [0, 0, 0];
+    var zMax = coil.sol ? 2.4 : 1.9;
     function dir(x, y, z, o) {
       biot(F, x, y, z, eps2, B);
       var m = Math.sqrt(B[0] * B[0] + B[1] * B[1] + B[2] * B[2]) || 1;
@@ -246,12 +264,16 @@
         len += Math.abs(h);
         var dx = p[0] - p0[0], dy = p[1] - p0[1], dz = p[2] - p0[2];
         if (len > 0.5 && dx * dx + dy * dy + dz * dz < 1.6 * h * h) { closed = true; break; }
-        if (Math.abs(p[0]) > 3.1 || Math.abs(p[1]) > 2.6 || Math.abs(p[2]) > 1.9) break;
+        if (Math.abs(p[0]) > 3.1 || Math.abs(p[1]) > 2.6 || Math.abs(p[2]) > zMax) break;
       }
       return { pts: pts, closed: closed };
     }
     var inner = coil.Rc - coil.a, seeds = [];
-    [0.06, 0.15, 0.26].forEach(function (d) {
+    if (coil.sol) {   // solenoid: seeds in the bore, at three radii
+      [0.3, 0.62, 0.86].forEach(function (f, k) {
+        for (var q = 0; q < 4; q++) { var an = q * Math.PI / 2 + k * 0.5; seeds.push([f * inner * Math.cos(an), f * inner * Math.sin(an), 0]); }
+      });
+    } else [0.06, 0.15, 0.26].forEach(function (d) {
       [-0.72, 0, 0.72].forEach(function (x) { seeds.push([x, inner - d, 0]); seeds.push([x, -(inner - d), 0]); });
       seeds.push([coil.Ls / 2 + inner - d, 0, 0]);
       seeds.push([-(coil.Ls / 2 + inner - d), 0, 0]);
@@ -479,14 +501,18 @@
   }
 
   /* shared geometry (computed once, lazily) */
-  var GEO = null;
-  function geo() {
-    if (GEO) return GEO;
-    var coil = new Coil();
+  var GEOS = {};
+  var SHAPES = { racetrack: null, solenoid: { Ls: 0, nS: 0, nA: 30, Rc: 0.74, wr: 0.28, hz: 1.3, no: 6, nt: 3 } };
+  function geo(shape) {
+    shape = shape || 'racetrack';
+    if (GEOS[shape]) return GEOS[shape];
+    var coil = new Coil(SHAPES[shape]);
     coil.computeFields();
-    GEO = { coil: coil, R: new Renderer(coil), lines: traceFieldLines(coil) };
-    return GEO;
+    return (GEOS[shape] = { coil: coil, R: new Renderer(coil), lines: traceFieldLines(coil) });
   }
+  // camera spans [width, height] of each scene, per shape
+  var SPANS = { racetrack: { mag: [5.4, 3.0], mech: [4.7, 2.5] }, solenoid: { mag: [3.3, 2.8], mech: [2.5, 2.25] } };
+  function spans(shape, k) { return SPANS[shape || 'racetrack'][k]; }
 
   function fitCam(cam, W, H, spanX, spanY, cxFrac, cyFrac) {
     cam.dist = 7;
@@ -497,11 +523,18 @@
 
   /* ================================================================ scenes */
 
+  // the same scene drawn with another coil shape (e.g. a solenoid instead of the racetrack)
+  function withShape(Base, shape) {
+    function S() { Base.call(this, shape); }
+    S.prototype = Object.create(Base.prototype); S.prototype.constructor = S;
+    return S;
+  }
+
   /* 0 — magnetic: |B| colour map + animated field lines */
-  function SceneMagnetic() { this.cam = new Cam(); }
+  function SceneMagnetic(shape) { this.cam = new Cam(); this.shape = shape; }
   SceneMagnetic.prototype.draw = function (ctx, W, H, t) {
-    var G = geo(), cam = this.cam;
-    fitCam(cam, W, H, 5.4, 3.0, 0.5, 0.52);
+    var G = geo(this.shape), cam = this.cam, sp = spans(this.shape, 'mag');
+    fitCam(cam, W, H, sp[0], sp[1], 0.5, 0.52);
     cam.yaw = 0.5 + 0.32 * Math.sin(t * 0.21);
     cam.pitch = 0.6 + 0.04 * Math.sin(t * 0.16);
     cam.update();
@@ -513,16 +546,16 @@
   };
 
   /* 1 — mechanics: stress colour map + breathing deformation + undeformed ghost */
-  function SceneMechanics() {
-    this.cam = new Cam();
-    var c = geo().coil;
+  function SceneMechanics(shape) {
+    this.cam = new Cam(); this.shape = shape;
+    var c = geo(shape).coil;
     this.disp = new Float32Array(c.NV * 3);
     this.sc = new Float32Array(c.NV);
     this.ghost = new Float32Array(c.NR * 3);
   }
   SceneMechanics.prototype.draw = function (ctx, W, H, t) {
-    var G = geo(), c = G.coil, cam = this.cam, v;
-    fitCam(cam, W, H, 4.7, 2.5, 0.5, 0.53);
+    var G = geo(this.shape), c = G.coil, cam = this.cam, v, sp = spans(this.shape, 'mech');
+    fitCam(cam, W, H, sp[0], sp[1], 0.5, 0.53);
     cam.yaw = 0.42 + 0.26 * Math.sin(t * 0.18 + 1.2);
     cam.pitch = 0.62;
     cam.update();
@@ -557,14 +590,14 @@
   };
 
   /* 3 — quench: normal-zone propagation */
-  function SceneQuench() {
-    this.cam = new Cam();
-    this.T = new Float32Array(geo().coil.NV);
+  function SceneQuench(shape) {
+    this.cam = new Cam(); this.shape = shape;
+    this.T = new Float32Array(geo(shape).coil.NV);
     this.hp = new Float32Array(3);
   }
   SceneQuench.prototype.draw = function (ctx, W, H, t) {
-    var G = geo(), c = G.coil, cam = this.cam, v;
-    fitCam(cam, W, H, 4.7, 2.5, 0.5, 0.53);
+    var G = geo(this.shape), c = G.coil, cam = this.cam, v, sp = spans(this.shape, 'mech');
+    fitCam(cam, W, H, sp[0], sp[1], 0.5, 0.53);
     cam.yaw = 0.72 + 0.22 * Math.sin(t * 0.19);
     cam.pitch = 0.6;
     cam.update();
@@ -1605,7 +1638,8 @@
   /* ======================================================== registration */
   window.MDKit = {
     Stage: Stage, makeWidget: makeWidget, WINDOWS: WINDOWS, WW: WW, WH: WH,
-    scenes: { SceneMagnetic: SceneMagnetic, SceneMechanics: SceneMechanics, SceneConductor: SceneConductor, SceneQuench: SceneQuench, SceneCryo: SceneCryo, SceneCAD: SceneCAD },
+    scenes: { SceneMagnetic: SceneMagnetic, SceneMechanics: SceneMechanics, SceneConductor: SceneConductor, SceneQuench: SceneQuench, SceneCryo: SceneCryo, SceneCAD: SceneCAD,
+      SceneMagneticSol: withShape(SceneMagnetic, 'solenoid'), SceneMechanicsSol: withShape(SceneMechanics, 'solenoid'), SceneQuenchSol: withShape(SceneQuench, 'solenoid') },
     Cam: Cam, renderCoil: renderCoil, geo: geo, fitCam: fitCam,
     helpers: { clamp01: clamp01, lerp: lerp, easeOut: easeOut, easeInOut: easeInOut, backOut: backOut, hex: hex, rgba: rgba, mix: mix, frac: frac, cmap: cmap, roundRect: roundRect, polyCum: polyCum, polyAt: polyAt }
   };
