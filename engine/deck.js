@@ -911,7 +911,7 @@
         ['F', 'Fullscreen'],
         ['S', 'Speaker view (notes, timer)'],
         ['B &nbsp; W', 'Black / white screen'],
-        ['V', 'Switch case (accelerator magnet → MRI magnet → ECR ion source)'],
+        ['V', 'Switch case (accelerator magnet → ECR ion source → MRI magnet)'],
         ['Q', 'Animation quality: auto · high · medium · low (now ' + Q.mode + (Q.mode === 'auto' ? ', ' + Q.name : '') + ')'],
         ['Esc', 'Leave the current tool']
       ];

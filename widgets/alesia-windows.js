@@ -560,7 +560,7 @@
     ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
     ctx.font = '600 14px Poppins, sans-serif'; ctx.fillStyle = '#46464e'; ctx.textAlign = 'center'; ctx.fillText(title, x + w / 2, y - 12);
     ctx.font = '12px Poppins, sans-serif'; ctx.fillStyle = '#8a8a93'; ctx.textAlign = 'right';
-    ticks.forEach(function (v) { var yy = y + h * (1 - (v - lo) / (hi - lo)); ctx.fillRect(x - 4, yy - 0.5, 4, 1); ctx.fillText(String(v), x - 7, yy + 4); });
+    ticks.forEach(function (v) { var yy = y + h * (1 - (v - lo) / (hi - lo)); ctx.fillRect(x - 4, yy - 0.5, 4, 1); ctx.fillText(String(v).replace('-', '\u2212'), x - 7, yy + 4); });
     var ms = (marks || []).map(function (m) { return { m: m, y: y + h * (1 - clamp01((m.v - lo) / (hi - lo))) }; });
     ms.sort(function (a, b) { return a.y - b.y; });
     ms.forEach(function (o, k) { o.ly = k ? Math.max(o.y, ms[k - 1].ly + 17) : o.y; });
@@ -716,11 +716,11 @@
     return {
       ri: 500 + 45 * S(0.37 * t), th: 430 + 45 * S(0.53 * t + 1), groups: groups,
       sr: 1960 + 60 * S(0.41 * t + 0.7), st: 170 + 30 * S(0.6 * t + 2), sz: 580 + 70 * S(0.35 * t + 1), sh: 500 + 70 * S(0.47 * t + 3),
-      jm: 110 + 45 * S(0.55 * t + 0.3), js: 70 + 40 * S(0.48 * t + 2.4)
+      jm: 110 + 45 * S(0.55 * t + 0.3), js: -(70 + 40 * S(0.48 * t + 2.4))   // the shielding coil carries the opposite current
     };
   };
   SceneMRIQuarter.prototype.draw = function (ctx, W, Hh, t) {
-    var d = this.dims(t), barW = 112, VW = W - barW, RMAX = 2400, ZMAX = 2200;
+    var d = this.dims(t), barW = 126, VW = W - barW, RMAX = 2400, ZMAX = 2200;
     var mL = 54, mB = 40, mT = 24, k = Math.min((VW - mL - 14) / RMAX, (Hh - mT - mB) / ZMAX);
     var ox = mL + Math.max(0, (VW - mL - 14 - RMAX * k) / 2), oy = mT + ZMAX * k;
     function X(r) { return ox + r * k; }
@@ -742,14 +742,14 @@
     ctx.strokeStyle = '#e2001a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(X(0), Y(0), 110 * k, -Math.PI / 2, 0); ctx.stroke();
     ctx.font = '600 12px Poppins, sans-serif'; ctx.fillStyle = '#e2001a'; ctx.textAlign = 'left'; ctx.fillText('DSV', X(0) + 110 * k + 4, Y(0) - 5);
     // main coil groups
-    CM_J(clamp01(d.jm / 200), col); var cm = rgb(col);
+    CM_J(clamp01((d.jm + 200) / 400), col); var cm = rgb(col);
     ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(30,30,40,.55)';
     d.groups.forEach(function (gp) {
       ctx.fillStyle = cm; ctx.fillRect(X(d.ri), Y(gp[1]), d.th * k, (gp[1] - gp[0]) * k);
       ctx.strokeRect(X(d.ri) + 0.5, Y(gp[1]) + 0.5, d.th * k - 1, (gp[1] - gp[0]) * k - 1);
     });
     // shielding coil
-    CM_J(clamp01(d.js / 200), col);
+    CM_J(clamp01((d.js + 200) / 400), col);
     ctx.fillStyle = rgb(col); ctx.fillRect(X(d.sr), Y(d.sz + d.sh), d.st * k, d.sh * k);
     ctx.strokeRect(X(d.sr) + 0.5, Y(d.sz + d.sh) + 0.5, d.st * k - 1, d.sh * k - 1);
     // labels
@@ -760,8 +760,8 @@
     ctx.font = '13px Poppins, sans-serif'; ctx.fillStyle = '#55555d'; ctx.fillText(d.groups.length + ' groups', lx, ly + 13);
     ctx.font = '600 15px Poppins, sans-serif'; ctx.fillStyle = '#1f1f24'; ctx.textAlign = 'center';
     ctx.fillText('shielding', X(d.sr + d.st / 2), Y(d.sz + d.sh) - 26); ctx.fillText('coil', X(d.sr + d.st / 2), Y(d.sz + d.sh) - 9);
-    colourBar(ctx, VW + 34, 34, 16, Hh - 70, CM_J, 'Je (A/mm²)', [0, 50, 100, 150, 200], 0, 200,
-      [{ v: d.jm, label: 'MC ' + Math.round(d.jm) }, { v: d.js, label: 'SC ' + Math.round(d.js) }]);
+    colourBar(ctx, VW + 36, 34, 16, Hh - 70, CM_J, 'Je (A/mm²)', [-200, -100, 0, 100, 200], -200, 200,
+      [{ v: d.jm, label: 'MC ' + Math.round(d.jm) }, { v: d.js, label: 'SC \u2212' + Math.round(-d.js) }]);
   };
 
   /* the two conductors of the MRI magnet, cross-sections with changing dimensions: WIC (wire in channel, shielding
