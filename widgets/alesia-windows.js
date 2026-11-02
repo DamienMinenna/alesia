@@ -835,6 +835,138 @@
     dims(x, y, cw, ch);
   };
 
+  /* HTS ECRIS (slide 5): the sextupole coil packs in their stainless-steel casing and aluminium shell, as in the
+     TOUHTATIS figures. One half is described below (figure units: pixels of the original drawing) and mirrored about
+     the split line 5. The numbered casing dimensions 1–5 change and the von Mises stress map follows (banded 0–180 MPa).
+     The stress is a smooth model, not a finite-element result: it only shows how the map reacts to the dimensions. */
+  var HC = { cx: 33, cy: 1080, rin: 628, rout: 1058, dx: 0.474, dy: -0.881 }; // centre, radii, split-line direction
+  var HC_PHI = Math.atan2(-HC.dy, HC.dx), HC_PHI_R = 2 * HC_PHI - Math.PI / 2;     // split line, right edge (math angles)
+  var HC_BOX = [28, 16, 922, 752], HC_CS = 5;                                       // grid box and cell size (figure units)
+  var VM_RGB = [[161, 0, 255], [0, 0, 255], [0, 170, 255], [0, 255, 255], [0, 255, 0], [184, 255, 0], [255, 255, 0], [255, 153, 0], [255, 0, 0], [204, 204, 204]];
+  var HC_R = [HC.dx * HC.dx - HC.dy * HC.dy, 2 * HC.dx * HC.dy, 2 * HC.dx * HC.dy, HC.dy * HC.dy - HC.dx * HC.dx]; // reflection
+  function hcMirror(x, y) {
+    var vx = x - HC.cx, vy = y - HC.cy;
+    return [HC.cx + HC_R[0] * vx + HC_R[1] * vy, HC.cy + HC_R[2] * vx + HC_R[3] * vy];
+  }
+  function hcOnSplit(y) { var t = (HC.cy - y) / -HC.dy; return [HC.cx + HC.dx * t, y]; }
+  function SceneHTSCasing() { this.g = null; }
+  SceneHTSCasing.prototype.fps = 10;
+  SceneHTSCasing.prototype.dims = function (t) {
+    var S = Math.sin;
+    return { y1: 222 + 8 * S(0.43 * t), x2: 202 + 40 * S(0.37 * t + 1), y3: 241 + 7 * S(0.51 * t + 2), x4: 372 + 14 * S(0.47 * t + 0.5), y5: 435 + 25 * S(0.41 * t + 3) };
+  };
+  // casing / aluminium boundary of half 1 (steps 1–4, then the slope towards the split with the dovetail notch)
+  function hcTop(d, x) { return x < d.x2 ? d.y1 : x < d.x4 ? d.y3 : d.y3 + (x - d.x4) * 0.552 - (x >= 439 ? 17 : 0); }
+  SceneHTSCasing.prototype.grid = function () {
+    if (this.g) return this.g;
+    var GW = Math.ceil((HC_BOX[2] - HC_BOX[0]) / HC_CS), GH = Math.ceil((HC_BOX[3] - HC_BOX[1]) / HC_CS), n = GW * GH;
+    var g = { GW: GW, GH: GH, hx: new Float32Array(n), hy: new Float32Array(n), u: new Float32Array(n), u12: new Float32Array(n), al: new Float32Array(n), rho: new Float32Array(n), inside: new Uint8Array(n) };
+    var span = Math.PI / 2 - HC_PHI;
+    for (var j = 0; j < GH; j++) for (var i = 0; i < GW; i++) {
+      var k = j * GW + i, x = HC_BOX[0] + (i + 0.5) * HC_CS, y = HC_BOX[1] + (j + 0.5) * HC_CS;
+      var vx = x - HC.cx, vy = y - HC.cy;
+      if (HC.dx * vy - HC.dy * vx > 0) { var m = hcMirror(x, y); x = m[0]; y = m[1]; vx = x - HC.cx; vy = y - HC.cy; } // half 2 → half 1
+      var r = Math.sqrt(vx * vx + vy * vy), phi = Math.atan2(-vy, vx);
+      g.hx[k] = x; g.hy[k] = y;
+      g.u[k] = clamp01((Math.PI / 2 - phi) / span); g.rho[k] = clamp01((r - HC.rin) / (HC.rout - HC.rin));
+      var qq = (1 - g.rho[k]) / 0.13, uu = g.u[k];
+      g.u12[k] = Math.pow(uu, 1.2); g.al[k] = 34 * uu * uu * uu * Math.exp(-qq * qq);   // parts of the field that never change
+      g.inside[k] = r > HC.rin - 3 && r < HC.rout + 3 && phi < Math.PI / 2 + 0.01 ? 1 : 0;
+    }
+    g.can = document.createElement('canvas'); g.can.width = GW; g.can.height = GH;
+    g.ctx = g.can.getContext('2d'); g.img = g.ctx.createImageData(GW, GH);
+    return (this.g = g);
+  };
+  SceneHTSCasing.prototype.field = function (d) {
+    var g = this.grid(), n = g.GW * g.GH, px = g.img.data, max = 0, E = Math.exp;
+    function bump(A, dx, dy, w2) { var r2 = dx * dx + dy * dy; return r2 > 9 * w2 ? 0 : A * E(-r2 / w2); }   // skip far cells
+    var kc1 = clamp01((230 - d.y1) / 16), k3 = clamp01((d.y3 - 234) / 14);
+    var A4 = 70 + 70 * k3, A2 = 28 + 36 * clamp01((d.x2 - 162) / 80), A5 = 70 * clamp01(1 - (d.y5 - 410) / 50), Ad = (40 + 35 * k3) * (1.25 - 0.5 * clamp01((d.x4 - 358) / 28));
+    var tip = hcOnSplit(d.y5);
+    for (var k = 0; k < n; k++) {
+      var x = g.hx[k], y = g.hy[k], u = g.u[k], rho = g.rho[k], top = hcTop(d, x), s;
+      if (y < top) {                                                     // aluminium shell
+        var dc = top - y;
+        s = 10 + 42 * g.u12[k] + (dc < 400 ? (22 + 14 * kc1) * E(-dc / 60) : 0) + g.al[k];
+      } else if (x >= 77 && x <= 342 && y >= 282 && y <= 425) {        // coil pack
+        s = (x >= 118 && x <= 322 && y >= 302 && y <= 410) ? 61 + 13 * (x - 118) / 204 + 11 * (y - 302) / 108 : 12 + 26 * u + 10 * (y - 282) / 143;
+      } else if (x <= 118 && y >= 305 && y <= 410) s = 8 + 14 * u;      // copper block (a)
+      else s = 10 + 44 * g.u12[k] + 8 * (1 - rho);                      // stainless-steel casing
+      var ax = x - d.x4, ay = y - d.y3, bx = x - d.x2, nx = x - 440, ny = y - 259, cx2 = x - 342, cy2 = y - 282, tx = x - tip[0], ty = y - d.y5;
+      // stress concentrations (corners, notch, end of the split, sloped interface): the strongest one is added
+      var cc = Math.max(bump(A4, ax, ay, 324), bump(A2, bx, ay, 144), bump(45, nx, ny, 121), bump(40, cx2, cy2, 196), bump(A5, tx, ty, 225));
+      if (x > d.x4 - 6 && x < 472) { var dd = y - top; if (dd * dd < 630) cc = Math.max(cc, Ad * E(-dd * dd / 70)); }
+      s += cc;
+      if (g.inside[k] && s > max) max = s;
+      var b = Math.min(9, Math.max(0, Math.floor(s / 20))), c = VM_RGB[b], p = 4 * k;
+      px[p] = c[0]; px[p + 1] = c[1]; px[p + 2] = c[2]; px[p + 3] = 255;
+    }
+    g.ctx.putImageData(g.img, 0, 0);
+    return max;
+  };
+  function hcSector(ctx) {
+    ctx.beginPath();
+    ctx.arc(HC.cx, HC.cy, HC.rout, -Math.PI / 2, -HC_PHI_R, false);
+    ctx.arc(HC.cx, HC.cy, HC.rin, -HC_PHI_R, -Math.PI / 2, true);
+    ctx.closePath();
+  }
+  SceneHTSCasing.prototype.draw = function (ctx, W, Hh, t) {
+    var d = this.dims(t), g = this.grid(), max = this.field(d);
+    var barW = 150, bw = HC_BOX[2] - HC_BOX[0], bh = HC_BOX[3] - HC_BOX[1];
+    var sc = Math.min((W - barW - 10) / bw, (Hh - 8) / bh), gw = bw * sc + 56 + 104;   // drawing + colour bar, centred together
+    var ox = Math.max(0, (W - gw) / 2) - HC_BOX[0] * sc, oy = (Hh - bh * sc) / 2 - HC_BOX[1] * sc;
+    var barX = ox + HC_BOX[2] * sc + 56;
+    ctx.save();
+    ctx.translate(ox, oy); ctx.scale(sc, sc);
+    hcSector(ctx); ctx.save(); ctx.clip();
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(g.can, HC_BOX[0], HC_BOX[1], g.GW * HC_CS, g.GH * HC_CS);
+    // both halves: voids, then the outlines
+    var lw = 1.1 / sc, tSplit = (HC.cy - (d.y3 + (440 - d.x4) * 0.552 - 17) + 224.66) / 1.1426;
+    function half() {
+      ctx.fillStyle = '#fff'; ctx.fillRect(50, 282, 25, 20); ctx.fillRect(50, 410, 25, 15);
+      ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = lw;
+      ctx.beginPath();
+      ctx.moveTo(HC.cx, d.y1); ctx.lineTo(d.x2, d.y1); ctx.lineTo(d.x2, d.y3); ctx.lineTo(d.x4, d.y3);
+      ctx.lineTo(439, hcTop(d, 438.9)); ctx.lineTo(439, hcTop(d, 439));
+      ctx.lineTo(HC.cx + HC.dx * tSplit, HC.cy + HC.dy * tSplit);
+      ctx.moveTo(d.x4, d.y3); ctx.lineTo(d.x4, 282); ctx.lineTo(342, 282);
+      ctx.rect(77, 282, 265, 143); ctx.rect(118, 302, 204, 54); ctx.rect(118, 359, 204, 51); ctx.rect(33, 305, 85, 105);
+      ctx.stroke();
+    }
+    half();
+    ctx.save(); ctx.transform(HC_R[0], HC_R[2], HC_R[1], HC_R[3], HC.cx - HC_R[0] * HC.cx - HC_R[1] * HC.cy, HC.cy - HC_R[2] * HC.cx - HC_R[3] * HC.cy); half(); ctx.restore();
+    // split line 5, from the inner radius up to its end
+    var a = [HC.cx + HC.dx * HC.rin, HC.cy + HC.dy * HC.rin], b5 = hcOnSplit(d.y5);
+    ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b5[0], b5[1]); ctx.stroke();
+    ctx.restore();
+    hcSector(ctx); ctx.strokeStyle = 'rgba(0,0,0,.75)'; ctx.lineWidth = lw; ctx.stroke();
+    ctx.restore();
+    // numbers of the varied dimensions (both halves, upright)
+    function lab(txt, x, y) {
+      var X = ox + x * sc, Y = oy + y * sc;
+      ctx.font = '700 17px Poppins, sans-serif'; ctx.textAlign = 'center'; ctx.lineJoin = 'round';
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.strokeText(txt, X, Y); ctx.fillStyle = '#111'; ctx.fillText(txt, X, Y);
+    }
+    var L = [['1', (HC.cx + d.x2) / 2 - 10, d.y1 - 14], ['2', d.x2 - 16, (d.y1 + d.y3) / 2 + 16], ['3', (d.x2 + d.x4) / 2, d.y3 - 14], ['4', d.x4 - 18, d.y3 + 30]];
+    L.forEach(function (l) { lab(l[0], l[1], l[2]); var m = hcMirror(l[1], l[2]); lab(l[0], m[0], m[1] + 12); });
+    var m5 = hcOnSplit((d.y5 + HC.cy - HC.rin * -HC.dy) / 2);
+    lab('5', m5[0] - 18, m5[1] + 6);
+    // banded colour bar, 0–180 MPa, with the maximum of the map
+    var bx = barX, by = 40, bH = Hh - 78, bW = 18, band = bH / 9.5;
+    ctx.fillStyle = 'rgb(204,204,204)'; ctx.fillRect(bx, by, bW, band * 0.5);
+    for (var i = 0; i < 9; i++) { var c = VM_RGB[i]; ctx.fillStyle = 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')'; ctx.fillRect(bx, by + band * 0.5 + (8 - i) * band, bW, band + 0.5); }
+    ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 1; ctx.strokeRect(bx + 0.5, by + 0.5, bW - 1, bH - 1);
+    ctx.font = '600 14px Poppins, sans-serif'; ctx.fillStyle = '#46464e'; ctx.textAlign = 'center'; ctx.fillText('von Mises (MPa)', bx + bW / 2 + 8, by - 14);
+    ctx.font = '12px Poppins, sans-serif'; ctx.fillStyle = '#8a8a93'; ctx.textAlign = 'right';
+    function yv(v) { return by + band * 0.5 + (9 - v / 20) * band; }
+    for (i = 0; i <= 9; i++) { var yy = yv(20 * i); ctx.fillRect(bx - 4, yy - 0.5, 4, 1); ctx.fillText(String(20 * i), bx - 7, yy + 4); }
+    var ym = Math.max(by + 2, yv(Math.min(max, 189)));
+    ctx.fillStyle = '#1f1f24'; ctx.fillRect(bx, ym - 1, bW, 2);
+    ctx.beginPath(); ctx.moveTo(bx + bW + 2, ym); ctx.lineTo(bx + bW + 11, ym - 6); ctx.lineTo(bx + bW + 11, ym + 6); ctx.closePath(); ctx.fill();
+    ctx.font = '600 13px Poppins, sans-serif'; ctx.textAlign = 'left'; ctx.fillText('max ' + Math.round(max), bx + bW + 15, ym + 4.5);
+  };
+
   // a strip of canvases drawn directly on the slide (no window), each with its scene
   function panelWidget(parts, labels) {
     return {
@@ -893,6 +1025,7 @@
   }
   Deck.widget('coil-params', panelWidget([{ Scene: SceneCoilYoke, flex: 1.15 }, { Scene: K.scenes.SceneConductor, flex: 1 }], ['Coil and yoke', 'Conductor']));
   Deck.widget('ibsimu-params', panelWidget([{ Scene: SceneIBSimuV, flex: 1 }], ['Beam extraction electrodes']));
+  Deck.widget('hts-params', panelWidget([{ Scene: SceneHTSCasing, flex: 1 }], ['Sextupole coils and casing (TOUHTATIS)']));
   Deck.widget('mri-params', panelWidget([{ Scene: SceneMRIQuarter, flex: 1.25 }, { Scene: SceneRicWic, flex: 1 }], ['Main and shielding coils (1/4 cross-section)', 'Conductors']));
 
   /* ============================== live workflow (slide "A new optimisation platform") */

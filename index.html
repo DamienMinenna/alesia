@@ -131,10 +131,10 @@
   <aside class="notes"></aside>
 </section>
 
-<!-- ======== 4 · OPTIMISATION OF SUPERCONDUCTING MAGNETS WITH ALESIA  (cases: accelerator magnet / ECRIS / MRI magnet) -->
-<section class="slide" data-title="Optimisation of superconducting magnets with ALESIA">
-  <h2 class="h2-long"><span data-for-variant="sc mri">Optimisation of superconducting magnets with ALESIA</span><span data-for-variant="ecris">Optimisation of ECR ion sources with ALESIA</span></h2>
-  <div class="variant-switch"><span class="vs-label">Case:</span><button data-variant="sc">Accelerator magnet</button><button data-variant="ecris">ECR ion source</button><button data-variant="mri">MRI magnet</button></div>
+<!-- ======== 4 · OPTIMISATION WITH ALESIA  (cases: accelerator magnet / ECRIS extraction / MRI magnet) -->
+<section class="slide" data-title="Optimisation with ALESIA">
+  <h2 class="h2-long"><span data-for-variant="sc">Optimisation of accelerator magnets with ALESIA</span><span data-for-variant="ecris">Optimisation of ECR ion sources with ALESIA</span><span data-for-variant="mri">Optimisation of MRI magnets with ALESIA</span></h2>
+  <div class="variant-switch"><span class="vs-label">Case:</span><button data-variant="sc">Accelerator magnet</button><button data-variant="ecris">Extraction for ECRIS</button><button data-variant="mri">MRI magnet</button></div>
   <div class="content cols" style="--cols: 0.5fr 1.5fr; --gap: 24px">
     <div style="font-size: 27px; align-self: center">
       <h3>New design philosophy</h3>
@@ -168,15 +168,16 @@
   <aside class="notes"></aside>
 </section>
 
-<!-- ================ 5 · OPTIMISATION OBJECTIVES  (cases: accelerator magnet / ECRIS / MRI magnet) -->
+<!-- ================ 5 · OPTIMISATION OBJECTIVES  (cases: accelerator magnet / ECRIS extraction / MRI magnet / HTS ECRIS) -->
 <section class="slide" data-title="Optimisation objectives">
   <h2>Optimisation objectives</h2>
-  <div class="variant-switch"><span class="vs-label">Case:</span><button data-variant="sc">Accelerator magnet</button><button data-variant="ecris">ECR ion source</button><button data-variant="mri">MRI magnet</button></div>
+  <div class="variant-switch"><span class="vs-label">Case:</span><button data-variant="sc">Accelerator magnet</button><button data-variant="ecris">Extraction for ECRIS</button><button data-variant="mri">MRI magnet</button><button data-variant="hts">HTS ECRIS</button></div>
   <div class="content cols" style="--cols: 0.86fr 1.14fr; --gap: 30px">
-    <div style="align-self:center">
+    <div style="align-self:center; font-size: 25px">
       <div data-for-variant="sc">
         <h3>Superconducting magnet optimisation</h3>
         <ul>
+          <li>Case: SPIN ROTATORS</li>
           <li>Dynamic inputs
             <ul>
               <li>Conductor dimensions</li>
@@ -198,6 +199,7 @@
       <div data-for-variant="mri">
         <h3>MRI magnet optimisation</h3>
         <ul>
+          <li>Case: ISEULT</li>
           <li>Dynamic inputs
             <ul>
               <li>Conductor dimensions (RIC and WIC)</li>
@@ -219,6 +221,7 @@
       <div data-for-variant="ecris">
         <h3>ECR ion source optimisation</h3>
         <ul>
+          <li>Case: ALISES</li>
           <li>Dynamic inputs
             <ul>
               <li>Electrode shape</li>
@@ -232,6 +235,18 @@
               <li>Beam emittance</li>
               <li>Maximum electric field</li>
             </ul>
+          </li>
+        </ul>
+      </div>
+      <div data-for-variant="hts">
+        <h3>ECR ion source optimisation</h3>
+        <ul>
+          <li>Case: TOUHTATIS HTS ECRIS</li>
+          <li>Dynamic inputs
+            <ul><li>Sextupole casing dimensions</li></ul>
+          </li>
+          <li>Targets and constraints
+            <ul><li>Stresses</li></ul>
           </li>
         </ul>
       </div>
@@ -257,10 +272,14 @@
     <div class="opt-right">
       <div class="param-anim" data-for-variant="sc" data-widget="coil-params"></div>
       <div class="param-anim" data-for-variant="mri" data-widget="mri-params"></div>
+      <div class="param-anim" data-for-variant="hts" data-widget="hts-params"></div>
       <div class="param-anim" data-for-variant="ecris" data-widget="ibsimu-params"></div>
       <div class="opt-land" data-widget="alesia-landscape"></div>
     </div>
   </div>
+  <p class="cite" data-for-variant="sc">Minenna et al. Submitted (2026), <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6641717">SSRN 6641717</a></p>
+  <p class="cite" data-for-variant="ecris">Tuske et al. J. Phys.: Conf. Ser. (2026), <a href="https://iopscience.iop.org/article/10.1088/1742-6596/3237/1/012088/meta">doi:10.1088/1742-6596/3237/1/012088</a></p>
+  <p class="cite" data-for-variant="hts">Minenna et al. EPJ RI (2026), <a href="https://link.springer.com/article/10.1007/s41781-026-00191-6">doi:10.1007/s41781-026-00191-6</a></p>
   <aside class="notes"></aside>
 </section>
 
@@ -327,7 +346,7 @@
 <!-- ======== 8 · APPLICATION TO SPIN ROTATORS · ECRIS ELECTRODE OPTIMISATION  (cases: accelerator magnet / ECRIS) -->
 <section class="slide" data-title="Application to SPIN ROTATORS · ECRIS electrode optimisation">
   <h2><span data-for-variant="sc">Application to SPIN ROTATORS</span><span data-for-variant="ecris">ECRIS electrode optimisation</span></h2>
-  <div class="variant-switch"><span class="vs-label">Case:</span><button data-variant="sc">Accelerator magnet</button><button data-variant="ecris">ECR ion source</button></div>
+  <div class="variant-switch"><span class="vs-label">Case:</span><button data-variant="sc">Accelerator magnet</button><button data-variant="ecris">Extraction for ECRIS</button></div>
   <div data-for-variant="sc" class="content rows" style="--gap: 18px">
     <div class="cols" style="--cols: 1fr 1.25fr; --gap: 40px">
       <div>
@@ -412,7 +431,7 @@
 <!-- ======== 12 · SPIN ROTATORS MAGNETS · ECR ION SOURCES  (cases: accelerator magnet / ECRIS) -->
 <section class="slide" data-title="SPIN ROTATORS magnets · ECR ion sources">
   <h2><span data-for-variant="sc">SPIN ROTATORS magnets</span><span data-for-variant="ecris">Electron cyclotron resonance ion sources</span></h2>
-  <div class="variant-switch"><span class="vs-label">Case:</span><button data-variant="sc">Accelerator magnet</button><button data-variant="ecris">ECR ion source</button></div>
+  <div class="variant-switch"><span class="vs-label">Case:</span><button data-variant="sc">Accelerator magnet</button><button data-variant="ecris">Extraction for ECRIS</button></div>
   <div data-for-variant="sc" class="content cols" style="--cols: 0.9fr 1.1fr; --gap: 40px">
     <div>
       <h3>Electron–Ion Collider (EIC)</h3>
