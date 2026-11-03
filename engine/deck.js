@@ -46,6 +46,10 @@
  *   build steps are counted per version; the deck opens on the default version
  *   key V: next version (from any slide)
  *
+ * Click to enlarge
+ *   <figure data-zoom> (or <img data-zoom>): a click shows the picture over almost the whole screen, with the
+ *   figure's caption; a click, Esc or a navigation key closes it (pen and laser still work on top of it)
+ *
  * Events: document.addEventListener('deck:enter' | 'deck:leave' | 'deck:step' | 'deck:variant', e => e.detail)
  */
 (function () {
@@ -392,6 +396,7 @@
   /* ------------------------------------------------------------ navigation */
   function go(i, s, opts) {
     opts = opts || {};
+    if (S.zoom) zoomClose(true);
     var n = S.slides.length;
     if (!n) return;
     i = clamp(i | 0, 0, n - 1);
@@ -537,6 +542,7 @@
       return;
     }
     if (S.overview && overviewKey(e)) return;
+    if (S.zoom && !S.tool && !/^(Shift|Control|Alt|Meta)$/.test(k) && !/^[phelPHEL]$/.test(k)) { zoomClose(); e.preventDefault(); e.stopPropagation(); return; }
     if (S.help && k !== '?') { if (k === 'Escape' || k === 'Enter' || k === ' ') { toggleHelp(false); e.preventDefault(); } return; }
 
     var handled = true;
@@ -1017,6 +1023,45 @@
     }, { passive: true });
   }
 
+  /* ------------------------------------------------------- click to enlarge */
+  function zoomOpen(z) {
+    var img = z.tagName === 'IMG' ? z : z.querySelector('img');
+    if (!img || !img.naturalWidth) return;
+    var cap = z.tagName === 'IMG' ? null : z.querySelector('figcaption');
+    var ov = el('div', 'deck-zoom'), fig = el('figure', 'deck-zoom-fig'), im = el('img');
+    im.src = img.currentSrc || img.src; im.alt = img.alt || '';
+    fig.appendChild(im);
+    if (cap) fig.appendChild(el('figcaption', '', cap.innerHTML));
+    ov.appendChild(fig);
+    // final size: almost the whole window, keeping the picture's proportions
+    var vw = window.innerWidth, vh = window.innerHeight, capH = cap ? 46 : 0;
+    var k = Math.min(vw * 0.94 / img.naturalWidth, (vh * 0.92 - capH) / img.naturalHeight);
+    var w = img.naturalWidth * k, h = img.naturalHeight * k;
+    im.style.width = w + 'px'; im.style.height = h + 'px';
+    document.body.appendChild(ov);
+    // start from the picture's place on the slide, then grow to the final size
+    var r = img.getBoundingClientRect(), f = im.getBoundingClientRect();
+    if (r.width && f.width) im.style.transform = 'translate(' + (r.left - f.left) + 'px,' + (r.top - f.top) + 'px) scale(' + (r.width / f.width) + ')';
+    void im.offsetWidth;
+    ov.classList.add('open'); im.style.transform = '';
+    ov.addEventListener('click', function () { zoomClose(); });
+    S.zoom = ov; S.zoomSrc = img;
+  }
+  function zoomClose(instant) {
+    var ov = S.zoom, img = S.zoomSrc;
+    if (!ov) return;
+    S.zoom = null; S.zoomSrc = null;
+    var im = ov.querySelector('img');
+    if (!instant && img && im) {   // shrink back to the slide
+      var r = img.getBoundingClientRect(), f = im.getBoundingClientRect();
+      var cur = im.style.transform; im.style.transform = 'none';
+      f = im.getBoundingClientRect(); im.style.transform = cur; void im.offsetWidth;
+      if (r.width && f.width) im.style.transform = 'translate(' + (r.left - f.left) + 'px,' + (r.top - f.top) + 'px) scale(' + (r.width / f.width) + ')';
+    }
+    ov.classList.remove('open');
+    setTimeout(function () { ov.remove(); }, instant ? 0 : 300);
+  }
+
   /* ----------------------------------------------------------------- print */
   function beforePrint() {
     document.body.classList.add('deck-printing');
@@ -1135,6 +1180,16 @@
     });
     window.addEventListener('beforeprint', beforePrint);
     window.addEventListener('afterprint', afterPrint);
+    // click on a figure with data-zoom: enlarge it
+    root.addEventListener('click', function (e) {
+      if (S.tool || S.zoom) return;
+      var z = e.target.closest && e.target.closest('[data-zoom]');
+      if (!z || !z.closest('.slide.active') || z.closest('.deck-clone')) return;
+      var st = z.closest('.step');
+      if (st && !st.classList.contains('step-visible')) return;   // not shown yet
+      e.preventDefault(); e.stopPropagation();
+      zoomOpen(z);
+    });
     // keep keyboard focus on the deck after clicking widget buttons
     root.addEventListener('click', function (e) {
       var b = e.target.closest && e.target.closest('button');
