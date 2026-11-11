@@ -702,6 +702,10 @@
      The main coil is made of blocks on both sides of the mid-plane: 5 per side, two of the gaps close and open again,
      so 3 to 5 blocks per side are seen (merged blocks are drawn as one). The two shielding coils sit further out. Each
      coil is coloured by its current density Je (the shielding coils carry the opposite current). Units: mm. */
+  // current densities of the main coil and of the shielding coils (opposite current), shared with the conductor view
+  var MRI_JMAX = 60;
+  function mriJ(t) { return { jm: 40 + 15 * Math.sin(0.55 * t + 0.3), js: -(32 + 15 * Math.sin(0.48 * t + 2.4)) }; }
+  function mriJColour(j) { var c = [0, 0, 0]; CM_J(clamp01((j + MRI_JMAX) / (2 * MRI_JMAX)), c); return c; }
   function SceneMRI3D() { this.cam = new K.Cam(); this.rc = [0, 0, 0]; this.pr = new Float32Array(3); }
   SceneMRI3D.prototype.fps = 15;
   SceneMRI3D.prototype.dims = function (t) {
@@ -717,7 +721,7 @@
     return {
       ri: 500 + 45 * S(0.37 * t), th: 430 + 45 * S(0.53 * t + 1), blocks: blocks,
       sr: 1960 + 60 * S(0.41 * t + 0.7), st: 170 + 30 * S(0.6 * t + 2), sz: 580 + 70 * S(0.35 * t + 1), sh: 500 + 70 * S(0.47 * t + 3),
-      jm: 110 + 45 * S(0.55 * t + 0.3), js: -(70 + 40 * S(0.48 * t + 2.4))
+      jm: mriJ(t).jm, js: mriJ(t).js
     };
   };
   var MRI_YAW = 1.12, MRI_PITCH = 0.4, MRI_NA = 24;
@@ -737,9 +741,7 @@
     });
     var mL = 10, mR = 10, mT = 26, mB = 14, fs = Math.min((VW - mL - mR) / (bx1 - bx0), (Hh - mT - mB) / (by1 - by0));
     cam.focal = fs; cam.cx = mL + ((VW - mL - mR) - (bx1 - bx0) * fs) / 2 - bx0 * fs; cam.cy = mT + ((Hh - mT - mB) - (by1 - by0) * fs) / 2 - by0 * fs;
-    var col = [0, 0, 0];
-    CM_J(clamp01((d.jm + 200) / 400), col); var cMain = col.slice();
-    CM_J(clamp01((d.js + 200) / 400), col); var cShield = col.slice();
+    var cMain = mriJColour(d.jm), cShield = mriJColour(d.js);
     function P(r, k, y) { return [r * MRI_COS[k], y, r * MRI_SIN[k]]; }
     function face(pts, n, c, cut, ed) { faces.push({ p: pts, n: n, c: c, cut: cut, e: ed || 0 }); }   // ed: edges drawn dark (bits 0–3)
     function tube(ri, ro, y0, y1, c) {   // a 270° tube, radii and axial ends in mm
@@ -799,11 +801,11 @@
     var kc = 0, rm = (d.ri + ro) / 2000, b2 = d.blocks[Math.min(1, d.blocks.length - 1)];
     cam.proj(rm * MRI_COS[0], 0, rm * MRI_SIN[0], pr, 0); var z0 = pr[2]; cam.proj(rm * MRI_COS[MRI_NA], 0, rm * MRI_SIN[MRI_NA], pr, 0);
     if (pr[2] < z0) kc = MRI_NA;
-    label('blocks', rm * MRI_COS[kc], -(b2[0] + b2[1]) / 2000, rm * MRI_SIN[kc], -34, 58);
+    label(2 * d.blocks.length + ' blocks', rm * MRI_COS[kc], -(b2[0] + b2[1]) / 2000, rm * MRI_SIN[kc], -34, 58);   // both sides
     var ks = 0, best = -2;
     for (var j = 0; j <= MRI_NA; j++) if (MRI_SIN[j] > best) { best = MRI_SIN[j]; ks = j; }
     label('shielding coil', (d.sr + d.st) / 1000 * MRI_COS[ks], -(d.sz + d.sh / 2) / 1000, (d.sr + d.st) / 1000 * MRI_SIN[ks], -24, -20);
-    colourBar(ctx, VW + 34, 34, 16, Hh - 70, CM_J, 'Je (A/mm²)', [-200, -100, 0, 100, 200], -200, 200,
+    colourBar(ctx, VW + 34, 34, 16, Hh - 70, CM_J, 'Je (A/mm²)', [-60, -30, 0, 30, 60], -MRI_JMAX, MRI_JMAX,
       [{ v: d.jm, label: 'MC ' + Math.round(d.jm) }, { v: d.js, label: 'SC −' + Math.round(-d.js) }]);
   };
 
@@ -866,10 +868,13 @@
       var tw = ctx.measureText(text).width;
       ctx.font = '13px Poppins, sans-serif'; ctx.fillStyle = '#6b6b73'; ctx.fillText(sub, 12 + tw, y);
     }
-    function jlabel(x, y, sub) {
-      ctx.fillStyle = '#9b1020'; ctx.textAlign = 'center';
-      ctx.font = 'italic 600 15px Poppins, sans-serif'; ctx.fillText('J', x - 6, y);
-      ctx.font = 'italic 11px Poppins, sans-serif'; ctx.fillText('e,' + sub, x + 12, y + 3);
+    var jj = mriJ(t);
+    function jlabel(x, y, sub, j) {   // in the colour of the coil's current density (same colour bar)
+      var c = mriJColour(j);
+      ctx.fillStyle = 'rgb(' + (c[0] | 0) + ',' + (c[1] | 0) + ',' + (c[2] | 0) + ')'; ctx.textAlign = 'center';
+      ctx.strokeStyle = 'rgba(30,30,40,.9)'; ctx.lineJoin = 'round'; ctx.lineWidth = 3.5;
+      ctx.font = 'italic 700 17px Poppins, sans-serif'; ctx.strokeText('J', x - 7, y); ctx.fillText('J', x - 7, y);
+      ctx.font = 'italic 700 12px Poppins, sans-serif'; ctx.lineWidth = 2.6; ctx.strokeText('e,' + sub, x + 12, y + 4); ctx.fillText('e,' + sub, x + 12, y + 4);
     }
     var areaW = W - 20;
     // ---- WIC (shielding coil): one strand soldered in a groove on top
@@ -881,7 +886,7 @@
     front(x, y, cw, ch);
     ctx.fillStyle = '#b9bcc3'; rrect(x + cw / 2 - dd * 0.62, y, dd * 1.24, dd * 1.12, dd * 0.5); ctx.fill();
     strand(x + cw / 2, y + dd * 0.55, dd);
-    jlabel(x + cw / 2, y + ch * 0.78, 'SC');
+    jlabel(x + cw / 2, y + ch * 0.78, 'SC', jj.js);
     dims(x, y, cw, ch);
     // ---- RIC (main coil): a Rutherford cable (2 × 5 strands) in a channel on top
     var y1 = y + ch + arrowH + gapH + titleH;
@@ -894,7 +899,7 @@
     front(x, y, cw, ch);
     ctx.fillStyle = '#3d3d42'; ctx.fillRect(cbx, y, cbw, cbh);
     for (var r = 0; r < 2; r++) for (c = 0; c < 5; c++) strand(cbx + dd * 0.15 + pitch * (c + 0.5), y + dd * 0.15 + pitch * (r + 0.5), dd);
-    jlabel(x + cw / 2, y + ch * 0.8, 'MC');
+    jlabel(x + cw / 2, y + ch * 0.8, 'MC', jj.jm);
     dims(x, y, cw, ch);
   };
 
